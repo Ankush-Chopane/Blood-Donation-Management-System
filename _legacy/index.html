@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>BloodConnect - Donate Blood, Save Lives (Management Platform)</title>
+  <meta name="description" content="BloodConnect is a real-time blood donation and request coordination system. Join our voluntary network to match blood types, find blood banks, and save lives.">
+  <meta name="keywords" content="blood donation, save lives, blood donor, blood compatibility, emergency blood request, blood bank locator">
+  <meta name="theme-color" content="#0b0c10">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="BloodConnect - Donate Blood, Save Lives">
+  <meta property="og:description" content="Connect blood donors with people in need through one smart platform. Real-time matching, donor database tracking, and compatibility engine.">
+  <meta property="og:image" content="./hero_donation_illustration.png">
+  <meta property="og:url" content="https://bloodconnect.org">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BloodConnect - Donate Blood, Save Lives">
+  <meta name="twitter:description" content="Connect blood donors with people in need through one smart platform. Real-time matching, donor database tracking, and compatibility engine.">
+  <meta name="twitter:image" content="./hero_donation_illustration.png">
+
+  <!-- Favicon Emoji -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom Animated Cursor -->
+  <div class="custom-cursor" id="custom-cursor" aria-hidden="true"></div>
+  <div class="custom-cursor-dot" id="custom-cursor-dot" aria-hidden="true"></div>
+
+  <!-- Premium Loading Screen -->
+  <div id="loader" class="loader-overlay" role="status" aria-label="Loading platform contents">
+    <div class="loader-content">
+      <div class="loader-logo">❤️</div>
+      <div class="loader-heartbeat" aria-hidden="true">
+        <svg viewBox="0 0 100 20">
+          <path d="M0,10 L35,10 L38,7 L42,13 L45,3 L49,17 L52,8 L56,12 L59,10 L100,10" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="loader-text">Connecting Hearts...</div>
+    </div>
+  </div>
+
+  <!-- Scroll Progress Indicator -->
+  <div id="scroll-progress" aria-hidden="true"></div>
+
+  <!-- Ambient Effects Layer -->
+  <div class="background-effects" aria-hidden="true">
+    <div class="gradient-orb-1"></div>
+    <div class="gradient-orb-2"></div>
+    <div class="particles-container" id="ambient-particles"></div>
+  </div>
+
+  <!-- Global Header & Sticky Glass Navbar -->
+  <header>
+    <nav class="navbar" id="main-navbar">
+      <a href="#" class="brand" aria-label="BloodConnect Home">
+        <span style="font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(239, 35, 60, 0.5)); margin-right: -4px;">❤️</span>
+        <span class="brand-text">Blood<span>Connect</span></span>
+      </a>
+
+      <!-- Navigation Links -->
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#" class="nav-link active">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#donate" class="nav-link">Donate</a></li>
+        <li><a href="#request" class="nav-link">Request Blood</a></li>
+        <li><a href="#blood-banks" class="nav-link">Blood Banks</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+        <!-- Mobile-only actions drawer -->
+        <li class="mobile-only-btn" style="width: 100%; margin-top: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <a href="#login" class="btn btn-glass" style="width: 100%; text-align: center;">Login</a>
+            <a href="#register" class="btn btn-primary" style="width: 100%; text-align: center;">Register</a>
+          </div>
+        </li>
+      </ul>
+
+      <!-- CTA Action Buttons -->
+      <div class="nav-actions">
+        <a href="#login" class="btn btn-glass" style="padding: 10px 20px;">Login</a>
+        <a href="#register" class="btn btn-primary" style="padding: 10px 24px;">Register</a>
+      </div>
+
+      <!-- Hamburger mobile toggle -->
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main>
+    <!-- Premium Hero Section -->
+    <section class="hero-section" id="hero">
+      
+      <!-- Heartbeat pulse wave background overlay -->
+      <div class="heartbeat-container">
+        <svg class="heartbeat-line" viewBox="0 0 100 20" preserveAspectRatio="none">
+          <path d="M0,10 L35,10 L38,6 L42,14 L46,2 L50,18 L54,8 L58,12 L61,10 L100,10" fill="none" stroke="rgba(239, 35, 60, 0.15)" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Ambient Floating Blood Drops SVGs -->
+      <svg class="floating-drop drop-1" viewBox="0 0 30 40">
+        <path d="M15,0 C15,0 30,17 30,27.5 C30,34.4 23.3,40 15,40 C6.7,40 0,34.4 0,27.5 C0,17 15,0 15,0 Z"/>
+      </svg>
+      <svg class="floating-drop drop-2" viewBox="0 0 30 40">
+        <path d="M15,0 C15,0 30,17 30,27.5 C30,34.4 23.3,40 15,40 C6.7,40 0,34.4 0,27.5 C0,17 15,0 15,0 Z"/>
+      </svg>
+      <svg class="floating-drop drop-3" viewBox="0 0 30 40">
+        <path d="M15,0 C15,0 30,17 30,27.5 C30,34.4 23.3,40 15,40 C6.7,40 0,34.4 0,27.5 C0,17 15,0 15,0 Z"/>
+      </svg>
+
+      <!-- Soft Medical Icons Floating in Background -->
+      <!-- Plus/Cross icon -->
+      <svg class="floating-drop" style="top: 15%; left: 45%; width: 28px; height: 28px; stroke: rgba(255,255,255,0.06); stroke-width: 1.5; fill: none; animation-name: float-drop; animation-duration: 14s; animation-delay: -2s;" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      <!-- Shield icon -->
+      <svg class="floating-drop" style="top: 60%; right: 48%; width: 24px; height: 24px; stroke: rgba(255,255,255,0.06); stroke-width: 1.5; fill: none; animation-name: float-drop; animation-duration: 16s; animation-delay: -5s;" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+
+      <div class="container hero-grid">
+        <!-- Hero Content (Left Column) -->
+        <div class="hero-content fade-in-up">
+          <h1 class="hero-headline">
+            Every Drop Counts.
+            <span>Every Donation Saves a Life.</span>
+          </h1>
+          <p class="hero-subheading">
+            Connect blood donors with people in need through one smart platform. Save lives with instant matching and modern tracking.
+          </p>
+          <div class="hero-buttons">
+            <a href="#donate" class="btn btn-primary">Donate Blood</a>
+            <a href="#request" class="btn btn-glass">Request Blood</a>
+          </div>
+        </div>
+
+        <!-- Hero Illustration (Right Column) -->
+        <div class="hero-image-wrapper fade-in-up delay-2">
+          <!-- Morphing SVG back-glow shape -->
+          <div class="hero-blob"></div>
+          
+          <!-- Modern illustration generated image frame -->
+          <div class="hero-image-container">
+            <img src="./hero_donation_illustration.png" alt="BloodConnect Digital Medical Network Illustration" class="hero-image" loading="eager">
+          </div>
+        </div>
+      </div>
+
+      <!-- Mouse Scroll Indicator -->
+      <a href="#statistics" class="hero-scroll-indicator fade-in-up delay-3" aria-label="Scroll down to statistics section">
+        <div class="scroll-mouse">
+          <div class="scroll-mouse-wheel"></div>
+        </div>
+        <span class="scroll-text">SCROLL DOWN</span>
+      </a>
+
+      <!-- Bottom transition wave -->
+      <div class="section-divider-wave">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,60 C150,100 350,120 600,80 C850,40 1050,90 1200,60 L1200,120 L0,120 Z" fill="var(--color-dark-bg)"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Animated Statistics Section -->
+    <section class="section" id="statistics" style="padding-top: 60px; padding-bottom: 60px;">
+      <div class="container">
+        <div class="stats-grid">
+          
+          <!-- Stat 1: Registered Donors -->
+          <div class="stat-card" data-target="25480">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="stat-number"><span class="counter">0</span>+</div>
+            <div class="stat-label">Registered Donors</div>
+          </div>
+
+          <!-- Stat 2: Blood Banks -->
+          <div class="stat-card" data-target="450">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"></path>
+                <path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1H3"></path>
+                <path d="M19 21V11H5v10"></path>
+                <path d="M12 14v4M10 16h4"></path>
+              </svg>
+            </div>
+            <div class="stat-number"><span class="counter">0</span>+</div>
+            <div class="stat-label">Blood Banks</div>
+          </div>
+
+          <!-- Stat 3: Lives Saved -->
+          <div class="stat-card" data-target="98200">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                <path d="M7.5 12h2.5l1.5-3 1.5 6 1.5-4 1 1h1"></path>
+              </svg>
+            </div>
+            <div class="stat-number"><span class="counter">0</span>+</div>
+            <div class="stat-label">Lives Saved</div>
+          </div>
+
+          <!-- Stat 4: Emergency Requests -->
+          <div class="stat-card" data-target="12350">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div class="stat-number"><span class="counter">0</span>+</div>
+            <div class="stat-label">Emergency Requests</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Timeline Section -->
+    <section class="section" id="timeline" style="padding-top: 60px; padding-bottom: 80px;">
+      <div class="container">
+        
+        <div style="text-align: center; margin-bottom: 60px;">
+          <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">The Process</span>
+          <h2 style="font-size: clamp(2.2rem, 4vw, 3rem); margin-top: 10px; font-weight: 800;">How BloodConnect Works</h2>
+          <p style="color: rgba(237, 242, 244, 0.55); max-width: 540px; margin: 12px auto 0 auto; font-size: 1rem;">
+            Four simple steps to connect, coordinate, and complete life-saving donations.
+          </p>
+        </div>
+
+        <div class="timeline-container">
+          <!-- Central timeline line -->
+          <div class="timeline-line"></div>
+
+          <!-- Step 1: Register (Left) -->
+          <div class="timeline-item left">
+            <div class="timeline-node"></div>
+            <div class="glass-card glass-card-interactive">
+              <div class="timeline-step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="19" y1="8" x2="19" y2="14"></line>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+              </div>
+              <h3 style="font-size: 1.35rem; margin-bottom: 10px; color: var(--color-white);">1. Register</h3>
+              <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+                Join our secure network by filling in your blood type and location. Be ready to volunteer or make requests instantly.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2: Find Blood (Right) -->
+          <div class="timeline-item right">
+            <div class="timeline-node"></div>
+            <div class="glass-card glass-card-interactive">
+              <div class="timeline-step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <path d="M11 8v6"></path>
+                  <path d="M8 11h6"></path>
+                </svg>
+              </div>
+              <h3 style="font-size: 1.35rem; margin-bottom: 10px; color: var(--color-white);">2. Find Blood</h3>
+              <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+                Locate nearby matching donors or scan available blood banks immediately. Post emergency alerts with one click.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3: Donate (Left) -->
+          <div class="timeline-item left">
+            <div class="timeline-node"></div>
+            <div class="glass-card glass-card-interactive">
+              <div class="timeline-step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                </svg>
+              </div>
+              <h3 style="font-size: 1.35rem; margin-bottom: 10px; color: var(--color-white);">3. Donate</h3>
+              <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+                Coordinate safe scheduling, check guidelines, and complete your donation process at verified clinics.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4: Save Lives (Right) -->
+          <div class="timeline-item right">
+            <div class="timeline-node"></div>
+            <div class="glass-card glass-card-interactive">
+              <div class="timeline-step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <h3 style="font-size: 1.35rem; margin-bottom: 10px; color: var(--color-white);">4. Save Lives</h3>
+              <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+                Be the reason someone gets another chance. Check updates, receive contribution badges, and inspire others.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    <!-- Blood Compatibility Section -->
+    <section class="section" id="compatibility" style="padding-top: 60px; padding-bottom: 80px;">
+      <div class="container">
+        
+        <div style="text-align: center; margin-bottom: 60px;">
+          <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Matching Engine</span>
+          <h2 style="font-size: clamp(2.2rem, 4vw, 3rem); margin-top: 10px; font-weight: 800;">Blood Compatibility Guide</h2>
+          <p style="color: rgba(237, 242, 244, 0.55); max-width: 540px; margin: 12px auto 0 auto; font-size: 1rem;">
+            Click on a blood group badge to highlight compatible donor and recipient groups instantly.
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;" class="compatibility-grid">
+          
+          <!-- Left Column: Interactive Badges and Details Card -->
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+            
+            <!-- Circular Badges Board -->
+            <div class="glass-card" style="padding: 24px;">
+              <h3 style="font-size: 1rem; color: var(--color-white); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; font-family: var(--font-heading);">Select a Blood Group</h3>
+              
+              <div class="badge-board" id="compatibility-badge-board">
+                <button class="compat-badge active" data-type="O-">O-</button>
+                <button class="compat-badge" data-type="O+">O+</button>
+                <button class="compat-badge" data-type="A-">A-</button>
+                <button class="compat-badge" data-type="A+">A+</button>
+                <button class="compat-badge" data-type="B-">B-</button>
+                <button class="compat-badge" data-type="B+">B+</button>
+                <button class="compat-badge" data-type="AB-">AB-</button>
+                <button class="compat-badge" data-type="AB+">AB+</button>
+              </div>
+            </div>
+
+            <!-- Compatibility Details Card -->
+            <div class="glass-card" id="compatibility-details-card">
+              <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                <div class="giant-badge" id="compat-giant-badge">O-</div>
+                <div style="flex: 1;">
+                  <h3 id="compat-title-type" style="font-size: 1.25rem; color: var(--color-white); font-family: var(--font-heading); margin-bottom: 4px;">Group O- (Universal Donor)</h3>
+                  <p id="compat-desc-text" style="color: rgba(237, 242, 244, 0.5); font-size: 0.9rem; line-height: 1.4;">
+                    Universal Donor: O- blood can be given to patients of any blood type in emergencies.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Recipient Flow -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; margin-bottom: 20px;">
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--color-secondary); letter-spacing: 0.8px; margin-bottom: 12px; font-family: var(--font-heading);">Can Donate To (Recipients)</h4>
+                <div class="compat-list-badges" id="compat-give-list">
+                  <!-- Badges will be generated dynamically -->
+                </div>
+              </div>
+
+              <!-- Donor Flow -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: #2ec4b6; letter-spacing: 0.8px; margin-bottom: 12px; font-family: var(--font-heading);">Can Receive From (Donors)</h4>
+                <div class="compat-list-badges" id="compat-receive-list">
+                  <!-- Badges will be generated dynamically -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Right Column: Educational Graphic illustration -->
+          <div class="glass-card" style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+            <h3 style="font-size: 1rem; color: var(--color-white); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; align-self: flex-start; font-family: var(--font-heading);">Visual Compatibility Network</h3>
+            
+            <div style="width: 100%; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--glass-border); box-shadow: var(--shadow-premium);">
+              <img src="./blood_compatibility_guide.png" alt="Educational Blood Compatibility Network chart" style="width: 100%; height: auto; display: block; mix-blend-mode: lighten;">
+            </div>
+            
+            <p style="color: rgba(237, 242, 244, 0.45); font-size: 0.85rem; text-align: center; margin-top: 16px; line-height: 1.4; max-width: 360px;">
+              Illustration demonstrating red blood cell antigen matching and antibodies flow patterns.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Premium Features Section -->
+    <section class="section" id="features" style="padding-top: 60px; padding-bottom: 80px;">
+      <div class="container">
+        
+        <div style="text-align: center; margin-bottom: 60px;">
+          <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Core Capabilities</span>
+          <h2 style="font-size: clamp(2.2rem, 4vw, 3rem); margin-top: 10px; font-weight: 800;">Platform Features</h2>
+          <p style="color: rgba(237, 242, 244, 0.55); max-width: 540px; margin: 12px auto 0 auto; font-size: 1rem;">
+            Discover how BloodConnect simplifies coordination, increases security, and coordinates live donations.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          
+          <!-- Card 1: Donor Registration -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 11h6M25 8v6"></path>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Donor Registration</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Sign up as a voluntary donor in under a minute. Update your medical history, availability, and donor status with ease.
+            </p>
+          </div>
+
+          <!-- Card 2: Emergency Alerts -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Emergency Alerts</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Broadcast urgent match requests to compatible local donors instantly during critical emergency situations.
+            </p>
+          </div>
+
+          <!-- Card 3: Nearby Blood Banks -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Nearby Blood Banks</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Pinpoint connected hospitals, blood storage facilities, and donation clinics on an interactive navigation grid.
+            </p>
+          </div>
+
+          <!-- Card 4: Real-time Inventory -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="13" x2="15" y2="13"></line>
+                <line x1="9" y1="17" x2="11" y2="17"></line>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Real-time Inventory</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Check live blood stock levels by blood type across medical storage centers to avoid search bottlenecks.
+            </p>
+          </div>
+
+          <!-- Card 5: Notifications -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Smart Notifications</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Receive instant alerts for nearby matching blood demands, drive updates, and donation cycle eligibility.
+            </p>
+          </div>
+
+          <!-- Card 6: Secure Authentication -->
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.25rem; color: var(--color-white); margin-bottom: 12px; font-family: var(--font-heading);">Secure Authentication</h3>
+            <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.95rem; line-height: 1.5;">
+              Protect patient profiles and contact records using advanced encryption standards and secure login workflows.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    <!-- Emergency CTA Section -->
+    <section class="section" id="emergency-cta" style="padding: 100px 0; position: relative; overflow: hidden; background: linear-gradient(180deg, #0B0C10 0%, #1a0003 50%, #0B0C10 100%); border-top: 1px solid rgba(239, 35, 60, 0.1); border-bottom: 1px solid rgba(239, 35, 60, 0.1);">
+      
+      <!-- Giant double-pulse heartbeat outline overlay -->
+      <div class="cta-heart-pulse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(239, 35, 60, 0.08)" stroke-width="0.3">
+          <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.28 2,8.5C2,5.42 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.09C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.42 22,8.5C22,12.28 18.6,15.36 13.45,20.03L12,21.35Z"/>
+        </svg>
+      </div>
+
+      <!-- ECG scanline background loop -->
+      <div class="cta-pulse-background">
+        <svg viewBox="0 0 100 20" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+          <path d="M0,10 L30,10 L33,7 L37,13 L40,3 L44,17 L47,8 L51,12 L54,10 L100,10" fill="none" stroke="rgba(239, 35, 60, 0.05)" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="container" style="position: relative; z-index: 5; text-align: center;">
+        
+        <h2 style="font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; background: linear-gradient(180deg, var(--color-white) 20%, rgba(255,255,255,0.7) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: var(--font-heading);">
+          Need Blood Urgently?
+        </h2>
+        
+        <p style="color: rgba(237, 242, 244, 0.7); font-size: 1.25rem; max-width: 500px; margin: 0 auto 40px auto; font-family: var(--font-body);">
+          Find compatible donors within minutes. Create an alert and match instantly with local volunteers.
+        </p>
+
+        <!-- CTA Buttons with glowing pulse backdrop -->
+        <div class="cta-buttons-wrapper">
+          <div class="cta-button-glow"></div>
+          
+          <a href="#request" class="btn btn-primary" style="box-shadow: 0 0 30px rgba(239, 35, 60, 0.45); padding: 14px 36px; font-size: 1.05rem;">Request Blood Now</a>
+          <a href="#register" class="btn btn-glass" style="padding: 14px 36px; font-size: 1.05rem; background: rgba(11, 12, 16, 0.4);">Become a Donor</a>
+        </div>
+
+      </div>
+    <!-- Testimonials Carousel Section -->
+    <section class="section" id="testimonials" style="padding-top: 60px; padding-bottom: 80px; position: relative; overflow: hidden;">
+      
+      <!-- Blurred red gradient background bubble -->
+      <div class="testimonials-glow"></div>
+
+      <div class="container" style="position: relative; z-index: 3;">
+        
+        <div style="text-align: center; margin-bottom: 50px;">
+          <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Testimonials</span>
+          <h2 style="font-size: clamp(2.2rem, 4vw, 3rem); margin-top: 10px; font-weight: 800;">What Our Community Says</h2>
+          <p style="color: rgba(237, 242, 244, 0.55); max-width: 540px; margin: 12px auto 0 auto; font-size: 1rem;">
+            Real stories from medical professionals, dedicated donors, and coordinated blood banks.
+          </p>
+        </div>
+
+        <!-- Carousel Container -->
+        <div class="carousel-container">
+          
+          <div class="carousel-track">
+            
+            <!-- Slide 1 -->
+            <div class="testimonial-slide active">
+              <div class="glass-card testimonial-card">
+                <div class="quote-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.192 15.757c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858zm10.757 0c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858z"/>
+                  </svg>
+                </div>
+                <p class="testimonial-text">
+                  "BloodConnect has revolutionized how our emergency ward communicates with donors. The compatibility grid and immediate alerts save precious minutes when a patient is in critical need."
+                </p>
+                <div class="testimonial-author">
+                  <img src="./avatar_sarah.png" alt="Dr. Sarah Jenkins headshot" class="author-avatar">
+                  <div>
+                    <h4 class="author-name">Dr. Sarah Jenkins</h4>
+                    <p class="author-title">Chief Medical Officer, City General Hospital</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="testimonial-slide">
+              <div class="glass-card testimonial-card">
+                <div class="quote-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.192 15.757c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858zm10.757 0c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858z"/>
+                  </svg>
+                </div>
+                <p class="testimonial-text">
+                  "I always wanted to donate regularly but struggled with matching schedule availability. This platform makes finding local donation centers and coordinating appointment requests effortless."
+                </p>
+                <div class="testimonial-author">
+                  <img src="./avatar_david.png" alt="David Miller headshot" class="author-avatar">
+                  <div>
+                    <h4 class="author-name">David Miller</h4>
+                    <p class="author-title">Frequent Blood Donor, Volunteer Network</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="testimonial-slide">
+              <div class="glass-card testimonial-card">
+                <div class="quote-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.192 15.757c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858zm10.757 0c0-.754-.254-1.442-.762-2.062a3.738 3.738 0 0 0-1.844-1.237c.102-.342.26-.689.475-1.039.215-.349.493-.706.833-1.07.34-.365.736-.739 1.189-1.124l-1.04-1.387c-.578.437-1.145.922-1.701 1.453-.556.531-1.04 1.113-1.453 1.747-.413.633-.718 1.314-.915 2.041a9.23 9.23 0 0 0-.294 2.378c0 1.258.337 2.259 1.011 3.003.674.745 1.547 1.118 2.619 1.118 1.071 0 1.95-.367 2.638-1.102.688-.735 1.031-1.688 1.031-2.858z"/>
+                  </svg>
+                </div>
+                <p class="testimonial-text">
+                  "Managing blood stock inventory was a constant hassle of manual checksheets. Now we coordinate inventory levels live, making it easy for nearby clinics to match requirements instantly."
+                </p>
+                <div class="testimonial-author">
+                  <img src="./avatar_emily.png" alt="Emily Rodriguez headshot" class="author-avatar">
+                  <div>
+                    <h4 class="author-name">Emily Rodriguez</h4>
+                    <p class="author-title">Blood Bank Coordinator, Metro Red Cross</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Carousel Controls -->
+          <div class="carousel-controls">
+            <button class="carousel-btn prev-btn" id="testimonial-prev" aria-label="Previous slide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            
+            <div class="carousel-dots" id="testimonial-dots">
+              <!-- Dots will be generated dynamically -->
+            </div>
+            
+            <button class="carousel-btn next-btn" id="testimonial-next" aria-label="Next slide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    <!-- FAQ Accordion Section -->
+    <section class="section" id="faq" style="padding-top: 60px; padding-bottom: 80px;">
+      <div class="container">
+        
+        <div style="text-align: center; margin-bottom: 50px;">
+          <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Questions</span>
+          <h2 style="font-size: clamp(2.2rem, 4vw, 3rem); margin-top: 10px; font-weight: 800;">Frequently Asked Questions</h2>
+          <p style="color: rgba(237, 242, 244, 0.55); max-width: 540px; margin: 12px auto 0 auto; font-size: 1rem;">
+            Find quick answers to common questions about donor qualifications, timing, safety, and inventory.
+          </p>
+        </div>
+
+        <div class="faq-accordion-container">
+          
+          <!-- FAQ Item 1 -->
+          <div class="faq-item">
+            <button class="faq-trigger">
+              <span class="faq-question">Who can donate blood?</span>
+              <span class="faq-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                <p>
+                  Generally, healthy individuals between 18 and 65 years old, weighing at least 50kg (110 lbs), with no active infections or recent tattoos/piercings (within 6 months) can donate blood. Eligibility guidelines may vary, so check our detailed criteria list.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ Item 2 -->
+          <div class="faq-item">
+            <button class="faq-trigger">
+              <span class="faq-question">How often can I donate blood?</span>
+              <span class="faq-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                <p>
+                  You can donate whole blood every 56 days (8 weeks) for both males and females. Platelet donations can be made every 14 days, up to 24 times a year, as your body replenishes platelets much faster than red blood cells.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ Item 3 -->
+          <div class="faq-item">
+            <button class="faq-trigger">
+              <span class="faq-question">Is blood donation safe?</span>
+              <span class="faq-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                <p>
+                  Yes, blood donation is extremely safe. All needles and collection bags are sterile, used only once, and disposed of immediately after use. The process is supervised by trained medical professionals in clean, sanitized environments.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ Item 4 -->
+          <div class="faq-item">
+            <button class="faq-trigger">
+              <span class="faq-question">How is blood stored and kept fresh?</span>
+              <span class="faq-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </span>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                <p>
+                  Whole blood is stored in specialized clinical refrigerators at 2°C to 6°C for up to 35-42 days. Platelets are stored at room temperature (20°C to 24°C) with continuous agitation and must be used within 5 days. Plasma is frozen and can be stored for up to a year.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section Spacing Demo & Layout Showcase -->
+    <section class="section container fade-in-up" id="about-preview">
+      <div style="text-align: center; margin-bottom: 60px;">
+        <span style="font-family: var(--font-heading); color: var(--color-primary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Global Design System & Layout</span>
+        <h1 style="font-size: clamp(2.5rem, 5vw, 3.8rem); margin-top: 10px; font-weight: 800; background: linear-gradient(135deg, #FFFFFF 30%, rgba(255,255,255,0.7) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Donate Blood, Save Lives.</h1>
+        <p style="color: rgba(237, 242, 244, 0.6); max-width: 600px; margin: 16px auto 0 auto; font-size: 1.1rem;">
+          Welcome to the visual foundation of the AuraBlood Management Platform. Below is the premium design guide demonstrating typography, buttons, glassmorphic cards, inputs, and section structures.
+        </p>
+      </div>
+
+      <!-- grid layout showing components -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px;">
+        
+        <!-- Component Showcase: Buttons -->
+        <article class="glass-card glass-card-interactive fade-in-up delay-1">
+          <div class="glass-card-glow"></div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--color-secondary);">01.</span> Button Elements
+          </h2>
+          <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.9rem; margin-bottom: 24px;">
+            Hover and click to test micro-interactions, responsive sizing, and depth glows.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <button class="btn btn-primary" style="width: 100%;">Primary Donate Button</button>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <button class="btn btn-secondary" style="flex: 1;">Secondary Button</button>
+              <button class="btn btn-glass" style="flex: 1;">Glass Border</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Component Showcase: Interactive Glassmorphism Cards -->
+        <article class="glass-card glass-card-interactive fade-in-up delay-2">
+          <div class="glass-card-glow"></div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--color-secondary);">02.</span> Glassmorphism Cards
+          </h2>
+          <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.9rem; margin-bottom: 20px;">
+            Built with multi-layer box shadows and premium backdrop blur. Hovering shifts perspective and lights up the subtle top accent bar.
+          </p>
+          <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--glass-border); padding: 16px; border-radius: var(--radius-md); text-align: center;">
+            <span style="font-family: var(--font-heading); font-size: 0.85rem; color: var(--color-white); letter-spacing: 1px;">PREMIUM GLOW LAYER</span>
+            <div style="color: rgba(237, 242, 244, 0.4); font-size: 0.8rem; margin-top: 4px;">Move cursor near card boundaries</div>
+          </div>
+        </article>
+
+        <!-- Component Showcase: Inputs -->
+        <article class="glass-card glass-card-interactive fade-in-up delay-3">
+          <div class="glass-card-glow"></div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--color-secondary);">03.</span> Interactive Input Fields
+          </h2>
+          <p style="color: rgba(237, 242, 244, 0.6); font-size: 0.9rem; margin-bottom: 24px;">
+            Sleek input layouts featuring dynamic validation colors and search overlays.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Input group with search icon -->
+            <div class="form-group">
+              <label class="form-label" for="search-blood">Search Donors / City</label>
+              <div class="input-container input-with-icon">
+                <div class="input-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                  </svg>
+                </div>
+                <input class="glass-input" type="text" id="search-blood" placeholder="Enter zip code, city, or group...">
+              </div>
+            </div>
+            <!-- Validation examples -->
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <input class="glass-input valid" type="text" value="Valid State" aria-label="Valid Input Example" readonly>
+              </div>
+              <div style="flex: 1;">
+                <input class="glass-input invalid" type="text" value="Invalid State" aria-label="Invalid Input Example" readonly>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Premium Global Footer -->
+  <footer class="footer-premium">
+    <div class="container">
+      <div class="footer-grid-premium">
+        
+        <!-- Brand Block -->
+        <div class="footer-col-brand">
+          <a href="#" class="brand-premium" aria-label="BloodConnect Home">
+            <span class="brand-logo-premium">❤️</span>
+            <span class="brand-text-premium">Blood<span>Connect</span></span>
+          </a>
+          <p class="footer-desc-premium">
+            Connecting donors with recipients instantly through a decentralized, real-time matching network. Every drop saves a life.
+          </p>
+          <div class="footer-socials-premium">
+            <a href="#" class="social-btn-premium" aria-label="Facebook">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>
+            </a>
+            <a href="#" class="social-btn-premium" aria-label="Twitter">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.2 2.4h3.3L14.3 11l8.5 11.3H16.2L11 15.4l-5.9 7H1.8l7.6-8.7L1.2 2.4h6.8l4.7 6.2 5.5-6.2zm-1.2 17.6h1.8L7.1 4.3H5.1L17 20z"/></svg>
+            </a>
+            <a href="#" class="social-btn-premium" aria-label="Instagram">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m8.4 4.5a.9.9 0 0 1 .9.9.9.9 0 0 1-.9.9.9.9 0 0 1-.9-.9.9.9 0 0 1 .9-.9M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+            </a>
+            <a href="#" class="social-btn-premium" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.8v8.37h2.8v-4.67c0-.25.02-.5.1-.68a1.14 1.14 0 0 1 1-.77c.76 0 1 .52 1 1.3v4.82h2.8M6.5 8.37a1.37 1.37 0 1 0 0-2.75 1.37 1.37 0 0 0 0 2.75M8 18.5V10.13H5V18.5H8z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div class="footer-col-premium">
+          <h3 class="footer-title-premium">Quick Links</h3>
+          <ul class="footer-links-premium">
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#timeline">How It Works</a></li>
+            <li><a href="#compatibility">Compatibility</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+            <li><a href="#faq">FAQs</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Services -->
+        <div class="footer-col-premium">
+          <h3 class="footer-title-premium">Services</h3>
+          <ul class="footer-links-premium">
+            <li><a href="#register">Donor Registration</a></li>
+            <li><a href="#request">Emergency Requests</a></li>
+            <li><a href="#banks">Nearby Blood Banks</a></li>
+            <li><a href="#inventory">Inventory Tracker</a></li>
+            <li><a href="#matching">Compatibility Engine</a></li>
+            <li><a href="#portal">Hospital Portal</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Emergency Contacts -->
+        <div class="footer-col-premium">
+          <h3 class="footer-title-premium emergency">Emergency Contacts</h3>
+          <ul class="footer-links-premium contact-info-premium">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon-svg"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>+1 (800) 555-BLOOD</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon-svg"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              <span>urgent@bloodconnect.org</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon-svg"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <span>Medical District, SF</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 5: Newsletter -->
+        <div class="footer-col-premium newsletter">
+          <h3 class="footer-title-premium">Alerts & News</h3>
+          <p class="newsletter-desc-premium">Subscribe to receive emergency blood shortage alerts and drive events.</p>
+          <form class="newsletter-form-premium" onsubmit="event.preventDefault(); alert('Subscribed successfully!');">
+            <input type="email" placeholder="Your email address" class="glass-input newsletter-input-premium" required aria-label="Email address for alerts newsletter">
+            <button type="submit" class="newsletter-btn-premium" aria-label="Subscribe to newsletter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom-premium">
+        <div>&copy; 2026 BloodConnect. All Rights Reserved.</div>
+        
+        <!-- Pulse heartbeat animation centered in copyright bar -->
+        <div class="footer-ecg-heartbeat">
+          <svg viewBox="0 0 100 20" preserveAspectRatio="none">
+            <path d="M0,10 L35,10 L38,7 L42,13 L45,3 L49,17 L52,8 L56,12 L59,10 L100,10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="footer-bottom-links-premium">
+          <a href="#privacy">Privacy Policy</a>
+          <a href="#terms">Terms of Service</a>
+          <a href="#security">Security Core</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Floating Action Button (FAB) -->
+  <div class="fab-container">
+    <button class="btn-fab main-fab" aria-label="Emergency options menu" aria-expanded="false" id="main-fab">
+      <span class="fab-icon">❤️</span>
+    </button>
+    <div class="fab-menu">
+      <a href="#emergency-cta" class="fab-item" data-tooltip="Request Blood" aria-label="Request Blood Now">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.03L12 21.35Z"/></svg>
+      </a>
+      <a href="#faq" class="fab-item" data-tooltip="FAQ Support" aria-label="View FAQ Support">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Back to Top Button -->
+  <button id="back-to-top" class="back-to-top-btn" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
+
+  <script src="app.js"></script>
+</body>
+</html>
