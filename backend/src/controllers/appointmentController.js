@@ -26,8 +26,12 @@ exports.createAppointment = asyncHandler(async (req, res) => {
   if (donorProfile.approvalStatus !== 'approved') {
     throw new AppError('Your donor profile must be approved before booking an appointment', 403);
   }
-  if (!donorProfile.isEligible || donorProfile.availability === 'unavailable') {
-    throw new AppError('You are currently not eligible or available for booking', 400);
+  const donorEligibilityWindowPassed = !donorProfile.nextEligibleDate || new Date(donorProfile.nextEligibleDate) <= new Date();
+  const donorIsEligibleNow = donorProfile.isEligible !== false && donorEligibilityWindowPassed && donorProfile.availability !== 'unavailable';
+
+  if (!donorIsEligibleNow) {
+    const nextDate = donorProfile.nextEligibleDate ? new Date(donorProfile.nextEligibleDate).toLocaleDateString() : 'soon';
+    throw new AppError(`You are currently not eligible for booking. Next eligible date: ${nextDate}`, 400);
   }
 
   const appointment = await Appointment.create({
@@ -124,6 +128,21 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
     throw new AppError('Not authorized to update this appointment', 403);
   }
 
+  if (req.user.role !== 'bank') {
+    throw new AppError('Only the assigned blood bank can manage this appointment', 403);
+  }
+
+  const assignedBank = await BloodBank.findOne({
+    _id: appointment.bloodBank,
+    user: req.user.id,
+    verificationStatus: 'approved',
+    status: 'active'
+  }).select('_id');
+
+  if (!assignedBank) {
+    throw new AppError('Only the approved assigned blood bank can manage this appointment', 403);
+  }
+
   const previousStatus = appointment.status;
   Object.assign(appointment, req.body);
 
@@ -167,6 +186,10 @@ exports.deleteAppointment = asyncHandler(async (req, res) => {
 
   if (!(await canManageAppointment(req, appointment))) {
     throw new AppError('Not authorized to delete this appointment', 403);
+  }
+
+  if (['admin', 'coordinator'].includes(req.user.role)) {
+    throw new AppError('Admins cannot manage donor appointments', 403);
   }
 
   await appointment.deleteOne();

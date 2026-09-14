@@ -7,6 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/database/seed.js",
+    "seed:reset": "node src/database/seed.js --reset",
     "create-user": "node src/database/createUser.js"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
+    "multer": "^2.3.0",
     "nodemailer": "^9.0.3",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"

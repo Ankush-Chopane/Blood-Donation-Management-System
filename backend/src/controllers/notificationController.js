@@ -21,6 +21,7 @@ exports.listNotifications = asyncHandler(async (req, res) => {
 
   if (['admin', 'coordinator'].includes(req.user.role)) {
     if (user) query.user = user;
+    if (req.user.role === 'admin') query.resourceType = 'BloodBank';
   } else {
     query.user = req.user.id;
   }

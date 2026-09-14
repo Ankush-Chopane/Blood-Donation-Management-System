@@ -18,10 +18,11 @@ const Register = () => {
   } = useForm();
 
   const password = watch('password');
+  const selectedRole = watch('role');
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const result = await registerUser(data.name, data.email, data.password, data.role);
+    const result = await registerUser(data.name, data.email, data.password, data.role, undefined, data.bankDetails);
     setLoading(false);
 
     if (result.success) {
@@ -46,7 +47,7 @@ const Register = () => {
           <p className="text-lightGray/50 text-sm mt-1">Register to connect with donors in your area.</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="auth-form flex flex-col gap-4">
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
             <label className="font-heading text-[0.7rem] font-semibold text-white uppercase tracking-wider" htmlFor="name">
@@ -105,14 +106,74 @@ const Register = () => {
                 className="w-full py-3 pl-11 pr-4 bg-[#151622] border border-glass-border rounded-xl text-white font-body text-[0.92rem] outline-none transition-all focus:border-secondary focus:bg-[#151622] focus:shadow-[0_0_15px_rgba(239,35,60,0.15)] appearance-none cursor-pointer"
                 {...register('role', { required: 'Role is required' })}
               >
-                <option value="donor">Donor (Can register donation history)</option>
-                <option value="recipient">Recipient (Needs emergency blood)</option>
-                <option value="bank">Blood Bank (Manages repository inventory)</option>
-                <option value="admin">Administrator (System Overlord)</option>
+                <option className="text-slate-900 bg-white" value="donor">Donor (Can register donation history)</option>
+                <option className="text-slate-900 bg-white" value="recipient">Recipient (Needs emergency blood)</option>
+                <option className="text-slate-900 bg-white" value="bank">Blood Bank (Manages repository inventory)</option>
               </select>
             </div>
+            <p className="text-lightGray/50 text-xs mt-1">
+              Administrator accounts cannot be self-registered. Please select donor, recipient, or blood bank.
+            </p>
             {errors.role && <span className="text-secondary text-xs">{errors.role.message}</span>}
           </div>
+
+          {selectedRole === 'bank' && (
+            <div className="grid gap-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
+              <p className="text-xs text-amber-200">Enter your facility details so donors can find this blood bank immediately.</p>
+              <input
+                type="text"
+                placeholder="Blood bank name"
+                className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                {...register('bankDetails.name', { required: 'Blood bank name is required' })}
+              />
+              {errors.bankDetails?.name && <span className="text-secondary text-xs">{errors.bankDetails.name.message}</span>}
+              <input
+                type="text"
+                placeholder="Full facility address"
+                className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                {...register('bankDetails.address', { required: 'Facility address is required' })}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                  {...register('bankDetails.city', { required: 'City is required' })}
+                />
+                <input
+                  type="text"
+                  placeholder="State"
+                  className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                  {...register('bankDetails.state', { required: 'State is required' })}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="6-digit PIN code"
+                  className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                  {...register('bankDetails.pinCode', {
+                    required: 'PIN code is required',
+                    pattern: { value: /^[1-9][0-9]{5}$/, message: 'Enter a valid six-digit Indian PIN code' }
+                  })}
+                />
+                <input
+                  type="text"
+                  placeholder="Contact number"
+                  className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                  {...register('bankDetails.contactNumber', { required: 'Contact number is required' })}
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="License ID (optional)"
+                className="w-full rounded-xl border border-glass-border bg-white/5 px-4 py-3 text-white outline-none focus:border-secondary"
+                {...register('bankDetails.licenseNumber')}
+              />
+            </div>
+          )}
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">

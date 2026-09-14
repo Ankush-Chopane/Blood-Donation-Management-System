@@ -36,3 +36,8 @@ npm-debug.log
 yarn-debug.log
 pnpm-debug.log
 coverage/
+
+# Uploads
+backend/src/uploads/*
+!backend/src/uploads/placeholder.md
+

@@ -79,15 +79,16 @@ const TABS_BY_ROLE = {
   ],
   bank: [
     { id: 'overview', label: 'Overview', icon: FiGrid },
-    { id: 'manage-inventory', label: 'Inventory', icon: FiDroplet },
+    { id: 'manage-inventory', label: 'Inventory', icon: FiDroplet, group: 'Bank Operations' },
+    { id: 'approve-requests', label: 'Verify Recipient Requests', icon: FiAlertCircle, group: 'Recipient Operations' },
+    { id: 'fulfill-requests', label: 'Fulfill Recipient Requests', icon: FiActivity },
+    { id: 'approve-donors', label: 'Review Donors', icon: FiCheckCircle, group: 'Donor Operations' },
     { id: 'bank-appointments', label: 'Donor Appointments', icon: FiCalendar },
-    { id: 'fulfill-requests', label: 'Fulfill Requests', icon: FiActivity },
     { id: 'notifications', label: 'Notifications', icon: FiBell },
     { id: 'settings', label: 'Settings', icon: FiSettings }
   ],
   admin: [
     { id: 'overview', label: 'Overview', icon: FiGrid },
-    { id: 'approve-donors', label: 'Approve Donors', icon: FiCheckCircle },
     { id: 'manage-banks', label: 'Blood Banks', icon: FaHospital },
     { id: 'audit-users', label: 'User Audit', icon: FiUsers },
     { id: 'notifications', label: 'Notifications', icon: FiBell },
@@ -103,9 +104,16 @@ const toneClasses = {
 };
 
 const priorityClasses = {
-  high: 'bg-rose-500/15 text-rose-200 border-rose-400/25',
-  medium: 'bg-amber-500/15 text-amber-100 border-amber-400/25',
-  normal: 'bg-sky-500/15 text-sky-100 border-sky-400/25'
+  dark: {
+    high: 'bg-rose-500/15 text-rose-200 border-rose-400/25',
+    medium: 'bg-amber-500/15 text-amber-100 border-amber-400/25',
+    normal: 'bg-sky-500/15 text-sky-100 border-sky-400/25'
+  },
+  light: {
+    high: 'bg-rose-100 text-rose-700 border-rose-200',
+    medium: 'bg-amber-100 text-amber-700 border-amber-200',
+    normal: 'bg-sky-100 text-sky-700 border-sky-200'
+  }
 };
 
 const getInitials = (name = 'User') =>
@@ -123,6 +131,17 @@ const formatTime = (value) => {
   } catch (e) {
     return value;
   }
+};
+
+const getIndiaToday = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
 };
 
 const MiniBarChart = ({ data, darkMode }) => {
@@ -233,7 +252,7 @@ const ActivityList = ({ items, darkMode }) => (
   </div>
 );
 
-const NotificationList = ({ items, darkMode, compact = false }) => (
+const NotificationList = ({ items, darkMode, compact = false, onItemClick }) => (
   <div className="grid gap-3">
     {items.length === 0 ? (
       <div className={`rounded-[1.5rem] border p-5 text-center ${darkMode ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
@@ -241,13 +260,18 @@ const NotificationList = ({ items, darkMode, compact = false }) => (
       </div>
     ) : (
       items.map((item, idx) => (
-        <div key={`${item.title}-${idx}`} className={`rounded-[1.5rem] border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-slate-50/80'}`}>
-          <div className={`mb-3 inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${priorityClasses[item.priority] || priorityClasses.normal}`}>
+        <button
+          key={`${item.title}-${idx}`}
+          type="button"
+          onClick={() => onItemClick?.(item)}
+          className={`w-full rounded-[1.5rem] border p-4 text-left transition hover:-translate-y-0.5 hover:border-rose-400/50 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-slate-50/80'}`}
+        >
+          <div className={`mb-3 inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${priorityClasses[darkMode ? 'dark' : 'light'][item.priority] || priorityClasses[darkMode ? 'dark' : 'light'].normal}`}>
             {item.priority}
           </div>
           <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
           <p className={`mt-1 ${compact ? 'text-sm' : 'text-sm leading-6'} ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.detail}</p>
-        </div>
+        </button>
       ))
     )}
   </div>
@@ -293,6 +317,7 @@ const Dashboard = () => {
   // Form input fields local states
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [fulfillmentUnits, setFulfillmentUnits] = useState(1);
 
   // Donor form
   const [donorForm, setDonorForm] = useState({
@@ -301,7 +326,7 @@ const Dashboard = () => {
     addressLine: '',
     city: '',
     state: '',
-    zipCode: '',
+    pinCode: '',
     availability: 'available'
   });
 
@@ -311,7 +336,7 @@ const Dashboard = () => {
     contactNumber: '',
     hospitalName: '',
     city: '',
-    zipCode: '',
+    pinCode: '',
     emergencyContactName: '',
     emergencyContactPhone: '',
     medicalHistory: ''
@@ -325,6 +350,9 @@ const Dashboard = () => {
     hospitalName: '',
     city: '',
     contactPhone: '',
+    doctorName: '',
+    medicalReferenceNumber: '',
+    documentProof: null,
     urgency: 'medium',
     notes: '',
     neededBy: ''
@@ -362,7 +390,7 @@ const Dashboard = () => {
     address: '',
     city: '',
     state: '',
-    zipCode: '',
+    pinCode: '',
     contactNumber: '',
     email: '',
     licenseNumber: '',
@@ -384,7 +412,10 @@ const Dashboard = () => {
       // 1. Load Notifications (all roles)
       const notifRes = await api.get('/notifications?limit=15');
       if (notifRes.data.success) {
-        setNotifications(notifRes.data.data || []);
+        const loadedNotifications = notifRes.data.data || [];
+        setNotifications(roleKey === 'admin'
+          ? loadedNotifications.filter((notification) => notification.resourceType === 'BloodBank')
+          : loadedNotifications);
       }
 
       // 2. Fetch data depending on user role
@@ -400,7 +431,7 @@ const Dashboard = () => {
               addressLine: profileRes.data.data.addressLine || '',
               city: profileRes.data.data.city || '',
               state: profileRes.data.data.state || '',
-              zipCode: profileRes.data.data.zipCode || '',
+              pinCode: profileRes.data.data.pinCode || '',
               availability: profileRes.data.data.availability || 'available'
             });
           }
@@ -446,7 +477,7 @@ const Dashboard = () => {
               contactNumber: profileRes.data.data.contactNumber || '',
               hospitalName: profileRes.data.data.hospitalName || '',
               city: profileRes.data.data.city || '',
-              zipCode: profileRes.data.data.zipCode || '',
+              pinCode: profileRes.data.data.pinCode || '',
               emergencyContactName: profileRes.data.data.emergencyContactName || '',
               emergencyContactPhone: profileRes.data.data.emergencyContactPhone || '',
               medicalHistory: profileRes.data.data.medicalHistory || ''
@@ -486,13 +517,11 @@ const Dashboard = () => {
       }
 
       if (roleKey === 'bank') {
-        // Fetch all blood banks to find the managed one
-        const bankRes = await api.get('/banks?limit=50');
-        if (bankRes.data.success && bankRes.data.data) {
-          const currentBank = bankRes.data.data.find(
-            (b) => b.user === user.id || b.user?._id === user.id
-          );
-          if (currentBank) {
+        // Fetch the bank profile owned by this account, including pending applications.
+        try {
+          const bankRes = await api.get('/banks/mine');
+          if (bankRes.data.success && bankRes.data.data) {
+            const currentBank = bankRes.data.data;
             setMyBank(currentBank);
 
             // Fetch this blood bank's inventory
@@ -507,11 +536,23 @@ const Dashboard = () => {
               setAppointments(apptRes.data.data || []);
             }
 
-            // Fetch requests matching the bank's city location
-            const reqRes = await api.get(`/requests?city=${currentBank.city}`);
+            // Fetch open requests across the network so notified eligible banks can review them.
+            const reqRes = await api.get('/requests?status=pending');
             if (reqRes.data.success) {
               setRequests(reqRes.data.data || []);
             }
+
+            // Fetch donor profiles awaiting this bank's review.
+            const donorRes = await api.get('/donors?limit=100');
+            if (donorRes.data.success) {
+              setAllDonors(donorRes.data.data || []);
+            }
+          }
+        } catch (error) {
+          if (error.response?.status === 404) {
+            setMyBank(null);
+          } else {
+            throw error;
           }
         }
       }
@@ -522,15 +563,16 @@ const Dashboard = () => {
         if (summaryRes.data.success) {
           const sums = summaryRes.data.data.totals;
           setStats([
-            { label: 'Active Users', value: `${sums.users}`, delta: 'Global network', tone: 'sky' },
-            { label: 'Open Requests', value: `${sums.pendingRequests}`, delta: `${sums.requests} total`, tone: 'amber' },
-            { label: 'Total Inventory', value: `${sums.availableInventoryUnits} units`, delta: 'Available', tone: 'emerald' },
-            { label: 'Blood Banks', value: `${sums.bloodBanks}`, delta: 'Live facilities', tone: 'rose' }
+            { label: 'Total Blood Banks', value: `${sums.bloodBanks}`, delta: 'All registered', tone: 'rose' },
+            { label: 'Approved Banks', value: `${sums.approvedBanks || 0}`, delta: 'Active and public', tone: 'emerald' },
+            { label: 'Pending Banks', value: `${sums.pendingBanks || 0}`, delta: 'Needs review', tone: 'amber' },
+            { label: 'Rejected Banks', value: `${sums.rejectedBanks || 0}`, delta: 'Not approved', tone: 'sky' },
+            { label: 'Suspended Banks', value: `${sums.suspendedBanks || 0}`, delta: 'Security control', tone: 'rose' }
           ]);
         }
 
         // Fetch all blood banks
-        const bankRes = await api.get('/banks?limit=100');
+        const bankRes = await api.get('/banks/admin/all');
         if (bankRes.data.success) {
           setAllBanks(bankRes.data.data || []);
         }
@@ -653,6 +695,18 @@ const Dashboard = () => {
       toast.error(err.response?.data?.message || 'Failed to book appointment');
     }
   };
+  const openBookingModal = async () => {
+    try {
+      const bankRes = await api.get('/banks?limit=50');
+      if (bankRes.data.success) {
+        setAllBanks(bankRes.data.data || []);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Unable to load approved blood banks');
+    } finally {
+      setBookingModalOpen(true);
+    }
+  };
 
   const handleCreateBloodRequest = async (e) => {
     e.preventDefault();
@@ -662,12 +716,17 @@ const Dashboard = () => {
     }
     try {
       const formattedDate = requestForm.neededBy ? new Date(requestForm.neededBy).toISOString() : null;
-      const res = await api.post('/requests', {
-        ...requestForm,
-        neededBy: formattedDate
+      const formData = new FormData();
+      Object.entries({ ...requestForm, neededBy: formattedDate }).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          formData.append(key, value);
+        }
+      });
+      const res = await api.post('/requests', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
-        toast.success('Emergency blood request published to system matching engine!');
+        toast.success('Blood request submitted for blood bank verification. It will not be public until approved.');
         setRequestForm({
           recipientName: user.name,
           bloodTypeNeeded: recipientProfile.bloodType || 'O+',
@@ -675,6 +734,9 @@ const Dashboard = () => {
           hospitalName: recipientProfile.hospitalName || '',
           city: recipientProfile.city || '',
           contactPhone: recipientProfile.contactNumber || '',
+          doctorName: '',
+          medicalReferenceNumber: '',
+          documentProof: null,
           urgency: 'medium',
           notes: '',
           neededBy: ''
@@ -855,21 +917,38 @@ const Dashboard = () => {
       const request = requests.find((r) => r._id === requestId);
       if (!request) return;
 
-      // Update inventory status to transfused
-      await api.put(`/inventory/${inventoryId}`, {
-        status: 'transfused',
-        reservedFor: requestId
-      });
+      const remainingUnits = request.unitsNeeded - (request.unitsFulfilled || 0);
+      const unitsToAllocate = Number(fulfillmentUnits);
+      if (!Number.isInteger(unitsToAllocate) || unitsToAllocate < 1 || unitsToAllocate > remainingUnits) {
+        toast.error(`Choose between 1 and ${remainingUnits} unit(s).`);
+        return;
+      }
+      if (unitsToAllocate > inventory.find((item) => item._id === inventoryId)?.units) {
+        toast.error('The selected batch does not have enough available units.');
+        return;
+      }
 
-      // Update blood request status to fulfilled
+      const selectedInventory = inventory.find((item) => item._id === inventoryId);
+      const updatedUnits = selectedInventory.units - unitsToAllocate;
+      if (updatedUnits === 0) {
+        await api.delete(`/inventory/${inventoryId}`);
+      } else {
+        await api.put(`/inventory/${inventoryId}`, {
+          units: updatedUnits,
+          status: 'available',
+          reservedFor: requestId
+        });
+      }
+
+      const totalFulfilled = (request.unitsFulfilled || 0) + unitsToAllocate;
       await api.put(`/requests/${requestId}`, {
-        status: 'fulfilled',
-        unitsFulfilled: request.unitsNeeded,
+        status: totalFulfilled >= request.unitsNeeded ? 'fulfilled' : 'matched',
+        unitsFulfilled: totalFulfilled,
         assignedBloodBank: myBank._id,
         note: `Blood units allocated and fulfilled by ${myBank.name}`
       });
 
-      toast.success('Emergency blood request successfully fulfilled and units dispatched!');
+      toast.success(`${unitsToAllocate} unit(s) dispatched. ${request.unitsNeeded - totalFulfilled} unit(s) remaining.`);
       setAllocateModalOpen(false);
       loadData();
     } catch (err) {
@@ -910,16 +989,26 @@ const Dashboard = () => {
   const handleCreateBloodBank = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/banks', newBankForm);
+      const payload = {
+        ...newBankForm,
+        user: roleKey === 'bank' ? user.id : newBankForm.user,
+        verificationStatus: 'pending',
+        status: 'inactive'
+      };
+      const res = roleKey === 'bank' && myBank
+        ? await api.put(`/banks/${myBank._id}`, payload)
+        : await api.post('/banks', payload);
       if (res.data.success) {
-        toast.success('New Blood Bank registered successfully!');
+        toast.success(roleKey === 'bank' && myBank
+          ? 'Profile updated and resubmitted for admin verification.'
+          : 'Blood Bank submitted for admin verification. It will not appear in public donor booking lists until approved.');
         setBankModalOpen(false);
         setNewBankForm({
           name: '',
           address: '',
           city: '',
           state: '',
-          zipCode: '',
+          pinCode: '',
           contactNumber: '',
           email: '',
           licenseNumber: '',
@@ -932,6 +1021,112 @@ const Dashboard = () => {
     }
   };
 
+  const handleApproveRecipientRequest = async (id) => {
+    try {
+      const res = await api.put(`/requests/${id}`, { verificationStatus: 'approved', status: 'pending' });
+      if (res.data.success) {
+        toast.success('Recipient request approved and published to donor network.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to approve request');
+    }
+  };
+
+  const handleRejectRecipientRequest = async (id) => {
+    const reason = window.prompt('Please specify rejection reason for recipient request:');
+    if (reason === null) return;
+    try {
+      const res = await api.put(`/requests/${id}`, {
+        verificationStatus: 'rejected',
+        rejectionReason: reason || 'Request did not pass verification checks.',
+        status: 'cancelled'
+      });
+      if (res.data.success) {
+        toast.success('Recipient request rejected and hidden from donor visibility.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reject request');
+    }
+  };
+
+  const handleApproveBloodBank = async (id) => {
+    try {
+      const res = await api.put(`/banks/${id}`, {
+        verificationStatus: 'approved',
+        status: 'active',
+        approvedBy: user.id,
+        verifiedAt: new Date().toISOString()
+      });
+      if (res.data.success) {
+        toast.success('Blood bank approved and published to donor booking list.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to approve blood bank');
+    }
+  };
+
+  const handleRejectBloodBank = async (id) => {
+    const reason = window.prompt('Specify rejection reason for blood bank:');
+    if (reason === null) return;
+    try {
+      const res = await api.put(`/banks/${id}`, {
+        verificationStatus: 'rejected',
+        status: 'inactive',
+        rejectionReason: reason || 'Incomplete verification details.',
+        verifiedAt: undefined
+      });
+      if (res.data.success) {
+        toast.success('Blood bank rejected and hidden from public donor booking list.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reject blood bank');
+    }
+  };
+
+  const handleSuspendBloodBank = async (bank) => {
+    const reason = window.prompt(`Reason for suspending ${bank.name}:`);
+    if (reason === null) return;
+    try {
+      const res = await api.put(`/banks/${bank._id}`, {
+        status: 'inactive',
+        rejectionReason: reason || 'Suspended by administrator for security review.'
+      });
+      if (res.data.success) {
+        toast.success('Blood bank suspended and removed from public listings.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to suspend blood bank');
+    }
+  };
+
+  const handleReactivateBloodBank = async (id) => {
+    try {
+      const res = await api.put(`/banks/${id}`, { status: 'active' });
+      if (res.data.success) {
+        toast.success('Blood bank reactivated and visible to approved users.');
+        loadData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reactivate blood bank');
+    }
+  };
+
+  const handleDeleteBloodBank = async (bank) => {
+    if (!window.confirm(`Delete rejected blood bank application for ${bank.name}? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/banks/${bank._id}`);
+      toast.success('Rejected blood bank application deleted.');
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete blood bank application');
+    }
+  };
+
   // Filter lists based on search headers
   const query = searchText.trim().toLowerCase();
 
@@ -941,7 +1136,43 @@ const Dashboard = () => {
       .filter((item) => item.title.toLowerCase().includes(query) || item.detail.toLowerCase().includes(query)))
     : [];
 
-  const unreadNotificationsCount = notifications.length;
+  const visibleNotifications = roleKey === 'admin'
+    ? notifications.filter((notification) => notification.resourceType === 'BloodBank')
+    : notifications;
+  const unreadNotificationsCount = visibleNotifications.filter((notification) => !notification.isRead).length;
+  const bankStatusNames = {
+    total: allBanks.map((bank) => bank.name),
+    approved: allBanks.filter((bank) => bank.verificationStatus === 'approved' && bank.status === 'active').map((bank) => bank.name),
+    pending: allBanks.filter((bank) => bank.verificationStatus === 'pending').map((bank) => bank.name),
+    rejected: allBanks.filter((bank) => bank.verificationStatus === 'rejected').map((bank) => bank.name),
+    suspended: allBanks.filter((bank) => bank.verificationStatus === 'approved' && bank.status === 'inactive').map((bank) => bank.name)
+  };
+
+  const handleNotificationClick = async (notification) => {
+    const tabByResource = {
+      BloodRequest: roleKey === 'bank' ? 'approve-requests' : 'blood-requests',
+      DonorProfile: roleKey === 'bank' ? 'approve-donors' : 'donor-profile',
+      BloodBank: 'manage-banks',
+      Appointment: roleKey === 'bank' ? 'bank-appointments' : 'book-appointment',
+      DonationHistory: 'donation-history',
+      Inventory: 'manage-inventory'
+    };
+
+    setActiveTab(tabByResource[notification.resourceType] || 'notifications');
+
+    if (!notification.isRead) {
+      try {
+        await api.put(`/notifications/${notification._id}`, { isRead: true });
+        setNotifications((current) => current.map((item) => (
+          item._id === notification._id
+            ? { ...item, isRead: true, deliveryStatus: 'read', readAt: new Date().toISOString() }
+            : item
+        )));
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Unable to mark notification as read');
+      }
+    }
+  };
 
   if (!user) return null;
 
@@ -995,23 +1226,25 @@ const Dashboard = () => {
                   const isActive = activeTab === tab.id;
 
                   return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveTab(tab.id);
-                        setMobileOpen(false);
-                      }}
-                      className={`group flex items-center justify-between rounded-[1.4rem] px-4 py-3.5 text-left transition-all ${isActive ? `bg-gradient-to-r ${roleMeta.accent} text-white shadow-[0_16px_30px_rgba(244,63,94,0.24)]` : isDark ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className={`rounded-2xl p-2 ${isActive ? 'bg-white/15' : isDark ? 'bg-white/5' : 'bg-white'}`}>
-                          <Icon />
+                    <React.Fragment key={tab.id}>
+                      {tab.group && <p className={`px-4 pt-4 text-[10px] font-bold uppercase tracking-[0.24em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{tab.group}</p>}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setMobileOpen(false);
+                        }}
+                        className={`group flex items-center justify-between rounded-[1.4rem] px-4 py-3.5 text-left transition-all ${isActive ? `bg-gradient-to-r ${roleMeta.accent} text-white shadow-[0_16px_30px_rgba(244,63,94,0.24)]` : isDark ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className={`rounded-2xl p-2 ${isActive ? 'bg-white/15' : isDark ? 'bg-white/5' : 'bg-white'}`}>
+                            <Icon />
+                          </span>
+                          <span className="font-medium">{tab.label}</span>
                         </span>
-                        <span className="font-medium">{tab.label}</span>
-                      </span>
-                      <FiChevronRight className={`${isActive ? 'opacity-100' : 'opacity-0 transition-opacity group-hover:opacity-100'}`} />
-                    </button>
+                        <FiChevronRight className={`${isActive ? 'opacity-100' : 'opacity-0 transition-opacity group-hover:opacity-100'}`} />
+                      </button>
+                    </React.Fragment>
                   );
                 })}
               </nav>
@@ -1087,7 +1320,11 @@ const Dashboard = () => {
                     {isDark ? <FiSun /> : <FiMoon />}
                   </button>
 
-                  <div className={`flex items-center gap-3 rounded-[1.2rem] border px-4 py-3 ${isDark ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-white'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('notifications')}
+                    className={`flex items-center gap-3 rounded-[1.2rem] border px-4 py-3 transition hover:border-rose-400/60 ${isDark ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-white'}`}
+                  >
                     <div className="relative">
                       <FiBell className={isDark ? 'text-slate-300' : 'text-slate-600'} />
                       <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
@@ -1095,7 +1332,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Alerts</span>
-                  </div>
+                  </button>
                 </div>
               </header>
 
@@ -1111,7 +1348,7 @@ const Dashboard = () => {
                   {/* 1. OVERVIEW TAB */}
                   {activeTab === 'overview' && (
                     <div className="grid gap-6">
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                      <div className={`grid gap-4 md:grid-cols-2 ${roleKey === 'admin' ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
                         {stats.map((card) => (
                           <AnalyticsCard key={card.label} card={card} darkMode={isDark} />
                         ))}
@@ -1217,22 +1454,13 @@ const Dashboard = () => {
                                     </div>
                                     <div className="flex gap-2">
                                       {['pending', 'matched'].includes(req.status) && (
-                                        <>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleMarkRequestFulfilled(req._id)}
-                                            className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold"
-                                          >
-                                            Fulfill
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleCancelRequest(req._id)}
-                                            className="py-2 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl text-xs font-bold"
-                                          >
-                                            Retract
-                                          </button>
-                                        </>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCancelRequest(req._id)}
+                                          className="py-2 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl text-xs font-bold"
+                                        >
+                                          Cancel Request
+                                        </button>
                                       )}
                                     </div>
                                   </div>
@@ -1257,6 +1485,66 @@ const Dashboard = () => {
 
                       {roleKey === 'bank' && (
                         <div className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+                          {!myBank && (
+                            <div className="lg:col-span-2 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5">
+                              <h3 className="font-heading text-lg font-bold">Complete your blood bank profile</h3>
+                              <p className="mt-2 text-sm text-slate-400">Register your facility details to appear in donor appointment bookings.</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNewBankForm((form) => ({
+                                    ...form,
+                                    name: user.name ? `${user.name} Blood Bank` : '',
+                                    email: user.email || '',
+                                    contactNumber: user.phone || '',
+                                    user: user.id
+                                  }));
+                                  setBankModalOpen(true);
+                                }}
+                                className="mt-4 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-slate-950 hover:bg-amber-400"
+                              >
+                                Create Blood Bank Profile
+                              </button>
+                            </div>
+                          )}
+                          {myBank && (
+                            <div className="lg:col-span-2 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <h3 className="font-heading text-lg font-bold">{myBank.name}</h3>
+                                <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${myBank.verificationStatus === 'approved' && myBank.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : myBank.verificationStatus === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                                  {myBank.verificationStatus === 'approved' && myBank.status === 'active' ? 'Approved and active' : myBank.verificationStatus || 'Pending approval'}
+                                </span>
+                              </div>
+                              <p className="mt-2 text-sm text-slate-400">
+                                {myBank.verificationStatus === 'approved' && myBank.status === 'active'
+                                  ? 'Your blood bank profile is approved and visible in donor appointment bookings.'
+                                  : 'Your facility details are saved. An admin must approve this application before it appears in donor appointment bookings.'}
+                              </p>
+                              <p className="mt-2 text-xs text-slate-500">{myBank.address}, {myBank.city} • PIN {myBank.pinCode || 'N/A'} • {myBank.contactNumber}</p>
+                              {myBank.verificationStatus === 'rejected' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNewBankForm({
+                                      name: myBank.name || '',
+                                      address: myBank.address || '',
+                                      city: myBank.city || '',
+                                      state: myBank.state || '',
+                                      pinCode: myBank.pinCode || '',
+                                      contactNumber: myBank.contactNumber || '',
+                                      email: myBank.email || myBank.user?.email || '',
+                                      licenseNumber: myBank.licenseNumber || '',
+                                      user: user.id
+                                    });
+                                    setBankModalOpen(true);
+                                  }}
+                                  className="mt-4 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-500"
+                                >
+                                  Edit Profile & Resubmit
+                                </button>
+                              )}
+                            </div>
+                          )}
                           <SectionCard title="Urgent Fulfillments Needed Nearby" kicker="Dispatch Queue" darkMode={isDark}>
                             <div className="grid gap-3">
                               {requests.filter((r) => r.status === 'pending').length === 0 ? (
@@ -1313,27 +1601,31 @@ const Dashboard = () => {
 
                       {roleKey === 'admin' && (
                         <div className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
-                          <SectionCard title="Latest System Audit Entries" kicker="System Audit" darkMode={isDark}>
-                            <div className="grid gap-3">
-                              {allUsers.slice(0, 5).map((u) => (
-                                <div key={u.email} className={`p-4 rounded-xl border flex items-center justify-between ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
-                                  <div>
-                                    <h4 className="font-bold">{u.name}</h4>
-                                    <p className="text-xs text-slate-400">{u.email}</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-xs uppercase bg-rose-500/20 text-rose-300 font-bold px-3 py-1 rounded-full">{u.role}</span>
-                                    <p className="text-[10px] text-slate-500 mt-1">Status: {u.status}</p>
+                          <SectionCard title="Blood Bank Control Center" kicker="Admin Oversight" darkMode={isDark}>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {[
+                                ['Total registered', stats[0]?.value || '0', 'text-white', bankStatusNames.total],
+                                ['Approved and active', stats[1]?.value || '0', 'text-emerald-400', bankStatusNames.approved],
+                                ['Pending review', stats[2]?.value || '0', 'text-amber-400', bankStatusNames.pending],
+                                ['Rejected', stats[3]?.value || '0', 'text-sky-400', bankStatusNames.rejected],
+                                ['Suspended', stats[4]?.value || '0', 'text-rose-400', bankStatusNames.suspended]
+                              ].map(([label, value, color, names]) => (
+                                <div key={label} className={`rounded-xl border p-4 ${isDark ? 'border-white/10 bg-white/[0.04]' : 'border-slate-200 bg-slate-50'}`}>
+                                  <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
+                                  <p className={`mt-2 text-2xl font-black ${color}`}>{value}</p>
+                                  <div className={`mt-2 max-h-16 overflow-y-auto text-xs leading-5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    {names.length ? names.map((name) => <div key={name}>{name}</div>) : 'No banks'}
                                   </div>
                                 </div>
                               ))}
                             </div>
                           </SectionCard>
 
-                          <SectionCard title="Pending Coordinator Audits" kicker="Review Queue" darkMode={isDark}>
-                            <div className="p-4 rounded-xl text-center border border-white/10 bg-white/5">
-                              <p className="text-sm text-slate-400">All coordinators active. Systems secure.</p>
-                            </div>
+                          <SectionCard title="Security Actions" kicker="Admin Control" darkMode={isDark}>
+                            <p className="text-sm leading-6 text-slate-400">Review pending applications and suspend or reactivate approved banks from the Blood Banks section.</p>
+                            <button type="button" onClick={() => setActiveTab('manage-banks')} className="mt-4 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-500">
+                              Open Blood Bank Reviews
+                            </button>
                           </SectionCard>
                         </div>
                       )}
@@ -1407,12 +1699,14 @@ const Dashboard = () => {
                           </label>
 
                           <label className="flex flex-col gap-1.5">
-                            <span className="font-heading text-xs font-semibold uppercase tracking-wider">Zip Code</span>
+                            <span className="font-heading text-xs font-semibold uppercase tracking-wider">PIN Code</span>
                             <input
                               type="text"
-                              value={donorForm.zipCode}
-                              onChange={(e) => setDonorForm({ ...donorForm, zipCode: e.target.value })}
-                              placeholder="Zip Code"
+                              value={donorForm.pinCode}
+                              onChange={(e) => setDonorForm({ ...donorForm, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                              placeholder="6-digit PIN code"
+                              inputMode="numeric"
+                              maxLength={6}
                               required
                               className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
                             />
@@ -1451,7 +1745,7 @@ const Dashboard = () => {
                       action={
                         <button
                           type="button"
-                          onClick={() => setBookingModalOpen(true)}
+                          onClick={openBookingModal}
                           className="flex items-center gap-2 py-2.5 px-5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm shadow-[0_10px_20px_rgba(239,35,60,0.25)]"
                         >
                           <FiPlus /> New Appointment
@@ -1595,12 +1889,14 @@ const Dashboard = () => {
 
                         <div className="grid gap-4 sm:grid-cols-3">
                           <label className="flex flex-col gap-1.5">
-                            <span className="font-heading text-xs font-semibold uppercase tracking-wider">Zip Code</span>
+                            <span className="font-heading text-xs font-semibold uppercase tracking-wider">PIN Code</span>
                             <input
                               type="text"
-                              value={recipientForm.zipCode}
-                              onChange={(e) => setRecipientForm({ ...recipientForm, zipCode: e.target.value })}
-                              placeholder="Zip Code"
+                              value={recipientForm.pinCode}
+                              onChange={(e) => setRecipientForm({ ...recipientForm, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                              placeholder="6-digit PIN code"
+                              inputMode="numeric"
+                              maxLength={6}
                               required
                               className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
                             />
@@ -1669,6 +1965,20 @@ const Dashboard = () => {
                             </label>
 
                             <label className="flex flex-col gap-1.5">
+                              <span className="font-heading text-xs font-semibold uppercase tracking-wider">Doctor Name</span>
+                              <input
+                                type="text"
+                                value={requestForm.doctorName}
+                                onChange={(e) => setRequestForm({ ...requestForm, doctorName: e.target.value })}
+                                placeholder="Attending doctor"
+                                required
+                                className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <label className="flex flex-col gap-1.5">
                               <span className="font-heading text-xs font-semibold uppercase tracking-wider">Blood Type Needed</span>
                               <select
                                 value={requestForm.bloodTypeNeeded}
@@ -1679,6 +1989,18 @@ const Dashboard = () => {
                                   <option key={type} value={type}>{type}</option>
                                 ))}
                               </select>
+                            </label>
+
+                            <label className="flex flex-col gap-1.5">
+                              <span className="font-heading text-xs font-semibold uppercase tracking-wider">Medical Reference No.</span>
+                              <input
+                                type="text"
+                                value={requestForm.medicalReferenceNumber}
+                                onChange={(e) => setRequestForm({ ...requestForm, medicalReferenceNumber: e.target.value })}
+                                placeholder="MRN / case number"
+                                required
+                                className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
+                              />
                             </label>
                           </div>
 
@@ -1716,7 +2038,7 @@ const Dashboard = () => {
                                 type="text"
                                 value={requestForm.city}
                                 onChange={(e) => setRequestForm({ ...requestForm, city: e.target.value })}
-                                placeholder="San Francisco"
+                                placeholder="Jalandhar"
                                 required
                                 className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
                               />
@@ -1754,9 +2076,22 @@ const Dashboard = () => {
                             <input
                               type="date"
                               value={requestForm.neededBy}
+                              min={getIndiaToday()}
+                              lang="en-IN"
                               onChange={(e) => setRequestForm({ ...requestForm, neededBy: e.target.value })}
                               required
                               className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
+                            />
+                          </label>
+
+                          <label className="flex flex-col gap-1.5">
+                            <span className="font-heading text-xs font-semibold uppercase tracking-wider">Medical Proof Document (PDF, JPG, or PNG)</span>
+                            <input
+                              type="file"
+                              accept="application/pdf,image/jpeg,image/png"
+                              onChange={(e) => setRequestForm({ ...requestForm, documentProof: e.target.files?.[0] || null })}
+                              required
+                              className={`py-3 px-4 border rounded-xl bg-transparent outline-none focus:border-rose-500 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800'}`}
                             />
                           </label>
 
@@ -1799,13 +2134,6 @@ const Dashboard = () => {
                                 </div>
                                 {['pending', 'matched'].includes(req.status) && (
                                   <div className="flex gap-2 mt-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleMarkRequestFulfilled(req._id)}
-                                      className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs"
-                                    >
-                                      Mark Fulfilled
-                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => handleCancelRequest(req._id)}
@@ -1930,7 +2258,7 @@ const Dashboard = () => {
                                       </span>
                                     </td>
                                     <td className="py-4 px-4">
-                                      <div className="flex gap-2">
+                                      {roleKey === 'bank' && <div className="flex gap-2">
                                         {appt.status === 'pending' && (
                                           <>
                                             <button
@@ -1966,7 +2294,7 @@ const Dashboard = () => {
                                             Check-in & Draw
                                           </button>
                                         )}
-                                      </div>
+                                      </div>}
                                     </td>
                                   </tr>
                                 ))}
@@ -1982,7 +2310,7 @@ const Dashboard = () => {
                   {activeTab === 'fulfill-requests' && roleKey === 'bank' && (
                     <SectionCard title="Compatible Open Requests In Your Area" kicker="City Demand" darkMode={isDark}>
                       <div className="grid gap-4">
-                        {requests.filter((r) => r.status === 'pending').length === 0 ? (
+                        {requests.filter((r) => ['pending', 'matched'].includes(r.status) && r.verificationStatus === 'approved' && (r.unitsFulfilled || 0) < r.unitsNeeded).length === 0 ? (
                           <div className={`p-10 text-center rounded-2xl border ${isDark ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
                             No pending blood requests in your city network.
                           </div>
@@ -1996,13 +2324,14 @@ const Dashboard = () => {
                                   <th className="py-4 px-4">Blood Group Needed</th>
                                   <th className="py-4 px-4">Hospital Location</th>
                                   <th className="py-4 px-4">Urgency</th>
+                                  <th className="py-4 px-4">Units</th>
                                   <th className="py-4 px-4">Needed By</th>
                                   <th className="py-4 px-4">Fulfillment Action</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {requests
-                                  .filter((r) => r.status === 'pending')
+                                  .filter((r) => ['pending', 'matched'].includes(r.status) && r.verificationStatus === 'approved' && (r.unitsFulfilled || 0) < r.unitsNeeded)
                                   .map((req) => (
                                     <tr key={req._id} className={`border-b text-sm ${isDark ? 'border-white/10 hover:bg-white/[0.02]' : 'border-slate-200 hover:bg-slate-50'}`}>
                                       <td className="py-4 px-4 font-black">{req.requestCode}</td>
@@ -2010,12 +2339,14 @@ const Dashboard = () => {
                                       <td className="py-4 px-4 text-rose-500 font-bold text-lg">{req.bloodTypeNeeded}</td>
                                       <td className="py-4 px-4 text-xs">{req.hospitalName}</td>
                                       <td className="py-4 px-4 uppercase text-xs font-bold text-red-400">{req.urgency}</td>
+                                      <td className="py-4 px-4 text-xs">{req.unitsNeeded} requested / {req.unitsFulfilled || 0} fulfilled / {req.unitsNeeded - (req.unitsFulfilled || 0)} remaining</td>
                                       <td className="py-4 px-4">{new Date(req.neededBy).toLocaleDateString()}</td>
                                       <td className="py-4 px-4">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             setSelectedRequest(req);
+                                            setFulfillmentUnits(Math.max(req.unitsNeeded - (req.unitsFulfilled || 0), 1));
                                             setAllocateModalOpen(true);
                                           }}
                                           className="py-1.5 px-4 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold"
@@ -2033,8 +2364,75 @@ const Dashboard = () => {
                     </SectionCard>
                   )}
 
-                  {/* 10. ADMIN APPROVE DONORS TAB */}
-                  {activeTab === 'approve-donors' && roleKey === 'admin' && (
+                  {/* 10. ADMIN VERIFY RECIPIENT REQUESTS TAB */}
+                  {activeTab === 'approve-requests' && roleKey === 'bank' && (
+                    <SectionCard title="Pending Recipient Verification Requests" kicker="Trust Review" darkMode={isDark}>
+                      <div className="grid gap-4">
+                        {requests.filter((r) => r.verificationStatus === 'pending').length === 0 ? (
+                          <div className={`p-10 text-center rounded-2xl border ${isDark ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
+                            No pending recipient requests awaiting verification.
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-left">
+                              <thead>
+                                <tr className={`border-b text-xs uppercase tracking-wider text-slate-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+                                  <th className="py-4 px-4">Patient</th>
+                                  <th className="py-4 px-4">Hospital</th>
+                                  <th className="py-4 px-4">Blood Group</th>
+                                  <th className="py-4 px-4">Doctor</th>
+                                  <th className="py-4 px-4">Reference</th>
+                                  <th className="py-4 px-4">Proof</th>
+                                  <th className="py-4 px-4">Units</th>
+                                  <th className="py-4 px-4">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {requests
+                                  .filter((r) => r.verificationStatus === 'pending')
+                                  .map((req) => (
+                                    <tr key={req._id} className={`border-b text-sm ${isDark ? 'border-white/10 hover:bg-white/[0.02]' : 'border-slate-200 hover:bg-slate-50'}`}>
+                                      <td className="py-4 px-4 font-bold">{req.recipientName}</td>
+                                      <td className="py-4 px-4">{req.hospitalName}</td>
+                                      <td className="py-4 px-4 font-bold text-rose-500">{req.bloodTypeNeeded}</td>
+                                      <td className="py-4 px-4">{req.doctorName || '--'}</td>
+                                      <td className="py-4 px-4 text-xs">{req.medicalReferenceNumber || '--'}</td>
+                                      <td className="py-4 px-4 text-xs">
+                                        {req.documentProofUrl ? (
+                                          <a href={`${API_URL.replace(/\/api\/?$/, '')}${req.documentProofUrl}`} target="_blank" rel="noreferrer" className="text-cyan-400 underline">View document</a>
+                                        ) : '--'}
+                                      </td>
+                                      <td className="py-4 px-4 text-xs">{req.unitsNeeded} requested</td>
+                                      <td className="py-4 px-4">
+                                        <div className="flex gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleApproveRecipientRequest(req._id)}
+                                            className="py-1 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold"
+                                          >
+                                            Approve
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleRejectRecipientRequest(req._id)}
+                                            className="py-1 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold"
+                                          >
+                                            Reject
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </SectionCard>
+                  )}
+
+                  {/* 11. ADMIN APPROVE DONORS TAB */}
+                  {activeTab === 'approve-donors' && roleKey === 'bank' && (
                     <SectionCard title="Pending Donor Registration Profiles" kicker="Audit Desk" darkMode={isDark}>
                       <div className="grid gap-4">
                         {allDonors.filter((d) => d.approvalStatus === 'pending').length === 0 ? (
@@ -2093,23 +2491,14 @@ const Dashboard = () => {
                   {/* 11. ADMIN BLOOD BANKS TAB */}
                   {activeTab === 'manage-banks' && roleKey === 'admin' && (
                     <SectionCard
-                      title="Registered Blood Bank Repositories"
-                      kicker="Facilities Index"
+                      title="Blood Bank Applications"
+                      kicker="Review Queue"
                       darkMode={isDark}
-                      action={
-                        <button
-                          type="button"
-                          onClick={() => setBankModalOpen(true)}
-                          className="flex items-center gap-2 py-2.5 px-5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm"
-                        >
-                          <FiPlus /> Register Blood Bank
-                        </button>
-                      }
                     >
                       <div className="grid gap-4 mt-4">
                         {allBanks.length === 0 ? (
                           <div className={`p-10 text-center rounded-2xl border ${isDark ? 'border-white/10 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
-                            No blood banks registered. Set one up using the button above.
+                            No blood bank applications have been submitted yet.
                           </div>
                         ) : (
                           <div className="overflow-x-auto">
@@ -2118,9 +2507,12 @@ const Dashboard = () => {
                                 <tr className={`border-b text-xs uppercase tracking-wider text-slate-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
                                   <th className="py-4 px-4">Name</th>
                                   <th className="py-4 px-4">License</th>
+                                  <th className="py-4 px-4">Address</th>
                                   <th className="py-4 px-4">City</th>
+                                  <th className="py-4 px-4">PIN Code</th>
                                   <th className="py-4 px-4">Contact Phone</th>
                                   <th className="py-4 px-4">Manager Email</th>
+                                  <th className="py-4 px-4">Review</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2128,9 +2520,65 @@ const Dashboard = () => {
                                   <tr key={bank._id} className={`border-b text-sm ${isDark ? 'border-white/10 hover:bg-white/[0.02]' : 'border-slate-200 hover:bg-slate-50'}`}>
                                     <td className="py-4 px-4 font-bold">{bank.name}</td>
                                     <td className="py-4 px-4 font-black">{bank.licenseNumber || 'N/A'}</td>
+                                    <td className="py-4 px-4">{bank.address || 'N/A'}</td>
                                     <td className="py-4 px-4">{bank.city}</td>
+                                    <td className="py-4 px-4">{bank.pinCode || 'N/A'}</td>
                                     <td className="py-4 px-4 font-bold text-rose-500">{bank.contactNumber}</td>
-                                    <td className="py-4 px-4 text-xs text-slate-400">{bank.user?.email || 'N/A'}</td>
+                                    <td className="py-4 px-4">
+                                      {bank.email || bank.user?.email || 'N/A'}
+                                    </td>
+                                    <td className="py-4 px-4">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${bank.verificationStatus === 'approved' ? 'bg-emerald-500/20 text-emerald-300' : bank.verificationStatus === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                                          {bank.verificationStatus || 'pending'}
+                                        </span>
+                                        {(!bank.verificationStatus || bank.verificationStatus === 'pending') && (
+                                          <div className="flex gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleApproveBloodBank(bank._id)}
+                                              className="py-1 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold"
+                                            >
+                                              Approve
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleRejectBloodBank(bank._id)}
+                                              className="py-1 px-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[10px] font-bold"
+                                            >
+                                              Reject
+                                            </button>
+                                          </div>
+                                        )}
+                                        {bank.verificationStatus === 'approved' && bank.status === 'active' && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSuspendBloodBank(bank)}
+                                            className="py-1 px-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[10px] font-bold"
+                                          >
+                                            Suspend
+                                          </button>
+                                        )}
+                                        {bank.verificationStatus === 'approved' && bank.status === 'inactive' && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleReactivateBloodBank(bank._id)}
+                                            className="py-1 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold"
+                                          >
+                                            Reactivate
+                                          </button>
+                                        )}
+                                        {(bank.verificationStatus === 'rejected' || (bank.verificationStatus === 'approved' && bank.status === 'inactive')) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteBloodBank(bank)}
+                                            className="py-1 px-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-[10px] font-bold"
+                                          >
+                                            Delete
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -2150,33 +2598,40 @@ const Dashboard = () => {
                             No users registered in directory audit trail.
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full border-collapse text-left">
-                              <thead>
-                                <tr className={`border-b text-xs uppercase tracking-wider text-slate-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-                                  <th className="py-4 px-4">Name</th>
-                                  <th className="py-4 px-4">Email</th>
-                                  <th className="py-4 px-4">Role</th>
-                                  <th className="py-4 px-4">Status</th>
-                                  <th className="py-4 px-4">Created Date</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {allUsers.map((u) => (
-                                  <tr key={u.email} className={`border-b text-sm ${isDark ? 'border-white/10 hover:bg-white/[0.02]' : 'border-slate-200 hover:bg-slate-50'}`}>
-                                    <td className="py-4 px-4 font-bold">{u.name}</td>
-                                    <td className="py-4 px-4 font-semibold text-slate-400">{u.email}</td>
-                                    <td className="py-4 px-4">
-                                      <span className="bg-rose-500/20 text-rose-300 text-xs font-bold tracking-wider px-2 py-0.5 rounded-full">
-                                        {u.role}
-                                      </span>
-                                    </td>
-                                    <td className="py-4 px-4 text-xs font-bold uppercase">{u.status}</td>
-                                    <td className="py-4 px-4 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                          <div className="grid gap-5 xl:grid-cols-3">
+                            {[
+                              { role: 'donor', title: 'Donor Accounts', accent: 'rose' },
+                              { role: 'recipient', title: 'Recipient Accounts', accent: 'sky' },
+                              { role: 'bank', title: 'Blood Bank Accounts', accent: 'amber' }
+                            ].map((group) => {
+                              const users = allUsers.filter((account) => account.role === group.role);
+                              return (
+                                <div key={group.role} className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-white/[0.03]' : 'border-slate-200 bg-slate-50/70'}`}>
+                                  <div className="mb-4 flex items-center justify-between gap-3">
+                                    <h3 className="font-heading font-bold">{group.title}</h3>
+                                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${group.accent === 'rose' ? 'bg-rose-500/20 text-rose-300' : group.accent === 'sky' ? 'bg-sky-500/20 text-sky-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                                      {users.length}
+                                    </span>
+                                  </div>
+                                  <div className="grid gap-3">
+                                    {users.length === 0 ? (
+                                      <p className={`rounded-xl border p-4 text-center text-sm ${isDark ? 'border-white/10 text-slate-500' : 'border-slate-200 text-slate-400'}`}>No accounts</p>
+                                    ) : (
+                                      users.map((account) => (
+                                        <div key={account.email} className={`rounded-xl border p-3 ${isDark ? 'border-white/10 bg-slate-950/30' : 'border-slate-200 bg-white'}`}>
+                                          <p className="font-bold">{account.name}</p>
+                                          <p className={`mt-1 break-all text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{account.email}</p>
+                                          <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                            <span className={account.status === 'active' ? 'text-emerald-500' : 'text-amber-500'}>{account.status}</span>
+                                            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>{new Date(account.createdAt).toLocaleDateString()}</span>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -2186,11 +2641,12 @@ const Dashboard = () => {
                   {/* 13. NOTIFICATIONS TAB */}
                   {activeTab === 'notifications' && (
                     <SectionCard title="Notification Center" kicker="Inbox" darkMode={isDark}>
-                      <NotificationList items={notifications.map((n) => ({
+                      <NotificationList items={visibleNotifications.map((n) => ({
+                        ...n,
                         title: n.title || 'Broadcast Alert',
                         detail: n.message,
                         priority: n.type === 'alert' ? 'high' : n.type === 'request' ? 'medium' : 'normal'
-                      }))} darkMode={isDark} />
+                      }))} darkMode={isDark} onItemClick={handleNotificationClick} />
                     </SectionCard>
                   )}
 
@@ -2246,9 +2702,13 @@ const Dashboard = () => {
                   className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 bg-slate-900' : 'border-slate-200 bg-white'}`}
                 >
                   <option value="">-- Choose Facility --</option>
-                  {allBanks.map((bank) => (
-                    <option key={bank._id} value={bank._id}>{bank.name} ({bank.city})</option>
-                  ))}
+                  {allBanks.length === 0 ? (
+                    <option value="" disabled>No approved blood banks available</option>
+                  ) : (
+                    allBanks.map((bank) => (
+                      <option key={bank._id} value={bank._id}>{bank.name} ({bank.city})</option>
+                    ))
+                  )}
                 </select>
               </label>
 
@@ -2499,6 +2959,18 @@ const Dashboard = () => {
             <p className="text-xs text-slate-400 mb-4">
               Fulfilling Request <strong className="text-white">{selectedRequest.requestCode}</strong> for <strong className="text-white">{selectedRequest.unitsNeeded} units</strong> of <strong className="text-rose-500">{selectedRequest.bloodTypeNeeded}</strong>.
             </p>
+            <label className="mb-4 flex flex-col gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Units to dispatch</span>
+              <input
+                type="number"
+                min="1"
+                max={Math.max(selectedRequest.unitsNeeded - (selectedRequest.unitsFulfilled || 0), 1)}
+                value={fulfillmentUnits}
+                onChange={(e) => setFulfillmentUnits(Number(e.target.value))}
+                className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-white/10 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-800'}`}
+              />
+              <span className="text-xs text-slate-500">Remaining: {selectedRequest.unitsNeeded - (selectedRequest.unitsFulfilled || 0)} unit(s)</span>
+            </label>
             <div className="grid gap-3 max-h-80 overflow-y-auto mt-2">
               <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-400">Select Available Stock Batch:</span>
               {inventory.filter((i) => i.status === 'available' && i.bloodType === selectedRequest.bloodTypeNeeded).length === 0 ? (
@@ -2540,7 +3012,7 @@ const Dashboard = () => {
             >
               <FiX />
             </button>
-            <h3 className="font-heading text-xl font-bold mb-4">Register New Blood Bank</h3>
+            <h3 className="font-heading text-xl font-bold mb-4">{roleKey === 'bank' && myBank ? 'Edit Blood Bank Profile' : roleKey === 'bank' ? 'Create Blood Bank Profile' : 'Register New Blood Bank'}</h3>
             <form onSubmit={handleCreateBloodBank} className="grid gap-4">
               <label className="flex flex-col gap-1.5">
                 <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-400">Blood Bank Name</span>
@@ -2548,7 +3020,7 @@ const Dashboard = () => {
                   type="text"
                   value={newBankForm.name}
                   onChange={(e) => setNewBankForm({ ...newBankForm, name: e.target.value })}
-                  placeholder="e.g. SF Central Blood Bank"
+                  placeholder="e.g. Jalandhar Blood Bank"
                   required
                   className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800 bg-white'}`}
                 />
@@ -2573,7 +3045,7 @@ const Dashboard = () => {
                     type="text"
                     value={newBankForm.city}
                     onChange={(e) => setNewBankForm({ ...newBankForm, city: e.target.value })}
-                    placeholder="San Francisco"
+                    placeholder="Jalandhar"
                     required
                     className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800 bg-white'}`}
                   />
@@ -2585,19 +3057,21 @@ const Dashboard = () => {
                     type="text"
                     value={newBankForm.state}
                     onChange={(e) => setNewBankForm({ ...newBankForm, state: e.target.value })}
-                    placeholder="CA"
+                    placeholder="Punjab"
                     required
                     className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800 bg-white'}`}
                   />
                 </label>
 
                 <label className="flex flex-col gap-1.5">
-                  <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-400">Zip Code</span>
+                  <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-400">PIN Code</span>
                   <input
                     type="text"
-                    value={newBankForm.zipCode}
-                    onChange={(e) => setNewBankForm({ ...newBankForm, zipCode: e.target.value })}
-                    placeholder="94103"
+                    value={newBankForm.pinCode}
+                    onChange={(e) => setNewBankForm({ ...newBankForm, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                    placeholder="e.g. 144001"
+                    inputMode="numeric"
+                    maxLength={6}
                     required
                     className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800 bg-white'}`}
                   />
@@ -2611,7 +3085,7 @@ const Dashboard = () => {
                     type="text"
                     value={newBankForm.contactNumber}
                     onChange={(e) => setNewBankForm({ ...newBankForm, contactNumber: e.target.value })}
-                    placeholder="e.g. +14155550144"
+                    placeholder="e.g. +919876543210"
                     required
                     className={`py-3 px-4 border rounded-xl bg-transparent outline-none ${isDark ? 'border-white/10 text-white bg-slate-900' : 'border-slate-200 text-slate-800 bg-white'}`}
                   />
@@ -2643,7 +3117,7 @@ const Dashboard = () => {
                   />
                 </label>
 
-                <label className="flex flex-col gap-1.5">
+                {roleKey !== 'bank' && <label className="flex flex-col gap-1.5">
                   <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-400">Assign Manager Account</span>
                   <select
                     value={newBankForm.user}
@@ -2656,14 +3130,14 @@ const Dashboard = () => {
                       <option key={u.email} value={u._id || u.id}>{u.name} ({u.email})</option>
                     ))}
                   </select>
-                </label>
+                </label>}
               </div>
 
               <button
                 type="submit"
                 className="py-3 px-6 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-[0_8px_16px_rgba(239,35,60,0.3)] mt-2"
               >
-                Create Blood Bank Profile
+                {roleKey === 'bank' && myBank ? 'Resubmit Blood Bank Profile' : 'Create Blood Bank Profile'}
               </button>
             </form>
           </div>

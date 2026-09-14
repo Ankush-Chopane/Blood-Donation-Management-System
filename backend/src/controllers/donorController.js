@@ -1,10 +1,38 @@
 const DonorProfile = require('../models/DonorProfile');
+const BloodBank = require('../models/BloodBank');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/appError');
 const { createNotification } = require('../services/notificationService');
 
+const withoutIncompleteLocation = (payload) => {
+  const cleanedPayload = { ...payload };
+  const coordinates = cleanedPayload.location?.coordinates;
+
+  if (!Array.isArray(coordinates) || coordinates.length !== 2) {
+    delete cleanedPayload.location;
+  }
+
+  return cleanedPayload;
+};
+
 const canManageDonor = (req, profile) =>
   profile.user.toString() === req.user.id || ['admin', 'coordinator'].includes(req.user.role);
+
+const requireVerifiedBank = async (req) => {
+  if (req.user.role !== 'bank') {
+    throw new AppError('Only an approved blood bank can manage donor approvals', 403);
+  }
+
+  const bank = await BloodBank.findOne({
+    user: req.user.id,
+    verificationStatus: 'approved',
+    status: 'active'
+  }).select('_id');
+
+  if (!bank) {
+    throw new AppError('Your blood bank must be approved and active before managing donors', 403);
+  }
+};
 
 const parseNearbyQuery = (req) => {
   const lat = Number(req.query.lat);
@@ -33,15 +61,17 @@ exports.createDonor = asyncHandler(async (req, res) => {
   }
 
   const donor = await DonorProfile.create({
-    ...req.body,
-    user: req.user.id
+    ...withoutIncompleteLocation(req.body),
+    user: req.user.id,
+    isEligible: req.body.isEligible !== false,
+    approvalStatus: 'pending'
   });
 
   await createNotification({
     user: req.user.id,
     type: 'approval',
     title: 'Donor profile submitted',
-    message: 'Your donor profile was created and is awaiting admin approval.',
+    message: 'Your donor profile was created and is awaiting blood bank review.',
     resourceType: 'DonorProfile',
     resourceId: donor._id
   });
@@ -77,7 +107,7 @@ exports.listDonors = asyncHandler(async (req, res) => {
   if (approvalStatus) query.approvalStatus = approvalStatus;
   if (isEligible !== undefined) query.isEligible = isEligible === 'true';
 
-  if (!req.user || !['admin', 'coordinator'].includes(req.user.role)) {
+  if (!req.user || !['admin', 'coordinator', 'bank'].includes(req.user.role)) {
     query.status = query.status || 'active';
     query.approvalStatus = query.approvalStatus || 'approved';
     query.isEligible = query.isEligible !== undefined ? query.isEligible : true;
@@ -154,7 +184,13 @@ exports.updateDonor = asyncHandler(async (req, res) => {
     throw new AppError('Not authorized to update this donor profile', 403);
   }
 
-  const updatedDonor = await DonorProfile.findByIdAndUpdate(req.params.id, req.body, {
+  const updatePayload = withoutIncompleteLocation(req.body);
+  delete updatePayload.approvalStatus;
+  delete updatePayload.rejectionReason;
+  delete updatePayload.approvedBy;
+  delete updatePayload.approvedAt;
+
+  const updatedDonor = await DonorProfile.findByIdAndUpdate(req.params.id, updatePayload, {
     new: true,
     runValidators: true
   }).populate('user', 'name email role phone');
@@ -186,6 +222,8 @@ exports.updateAvailability = asyncHandler(async (req, res) => {
 });
 
 exports.approveDonor = asyncHandler(async (req, res) => {
+  await requireVerifiedBank(req);
+
   const { approvalStatus, rejectionReason } = req.body;
   const donor = await DonorProfile.findById(req.params.id);
 

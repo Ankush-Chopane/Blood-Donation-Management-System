@@ -1,4 +1,4 @@
-const { EMAIL_REGEX, USER_ROLES } = require('../models/constants');
+const { EMAIL_REGEX, USER_ROLES, PHONE_REGEX, PIN_CODE_REGEX } = require('../models/constants');
 const AppError = require('../utils/appError');
 
 const PUBLIC_REGISTRATION_ROLES = ['donor', 'recipient', 'bank'];
@@ -24,6 +24,24 @@ const validateRegisterInput = (req, res, next) => {
 
   if (!PUBLIC_REGISTRATION_ROLES.includes(role)) {
     return next(new AppError('This account role cannot be self-registered', 403));
+  }
+
+  if (role === 'bank') {
+    const { bankDetails } = req.body;
+    const requiredBankFields = ['name', 'address', 'city', 'state', 'pinCode', 'contactNumber'];
+    const hasMissingField = !bankDetails || requiredBankFields.some((field) => !bankDetails[field]);
+
+    if (hasMissingField) {
+      return next(new AppError('Please provide complete blood bank facility details', 400));
+    }
+
+    if (!PIN_CODE_REGEX.test(bankDetails.pinCode)) {
+      return next(new AppError('Please provide a valid six-digit Indian PIN code', 400));
+    }
+
+    if (!PHONE_REGEX.test(bankDetails.contactNumber)) {
+      return next(new AppError('Please provide a valid Indian contact number', 400));
+    }
   }
 
   next();

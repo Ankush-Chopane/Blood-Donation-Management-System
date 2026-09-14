@@ -8,13 +8,14 @@ const {
   deleteRequest
 } = require('../controllers/requestController');
 const { protect, authorize } = require('../middleware/auth');
+const documentUpload = require('../middleware/upload');
 
 const router = express.Router();
 
 router
   .route('/')
   .get(listRequests)
-  .post(protect, authorize('recipient', 'admin', 'coordinator', 'donor'), createRequest);
+  .post(protect, authorize('recipient', 'admin', 'coordinator', 'donor'), documentUpload.single('documentProof'), createRequest);
 
 router
   .route('/:id')

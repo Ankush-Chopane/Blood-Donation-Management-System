@@ -2,6 +2,8 @@ const express = require('express');
 const {
   createBloodBank,
   listBloodBanks,
+  listAllBloodBanksForAdmin,
+  getMyBloodBank,
   getBloodBankById,
   updateBloodBank,
   deleteBloodBank
@@ -9,6 +11,9 @@ const {
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
+
+router.get('/mine', protect, authorize('bank'), getMyBloodBank);
+router.get('/admin/all', protect, authorize('admin'), listAllBloodBanksForAdmin);
 
 router
   .route('/')

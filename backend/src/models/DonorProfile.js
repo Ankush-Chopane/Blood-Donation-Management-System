@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { BLOOD_TYPES, PHONE_REGEX, ZIP_CODE_REGEX } = require('./constants');
+const { BLOOD_TYPES, PHONE_REGEX, PIN_CODE_REGEX } = require('./constants');
 
 const donorProfileSchema = new mongoose.Schema(
   {
@@ -22,11 +22,11 @@ const donorProfileSchema = new mongoose.Schema(
       trim: true,
       maxlength: 80
     },
-    zipCode: {
+    pinCode: {
       type: String,
-      required: [true, 'Please specify your zip code'],
+      required: [true, 'Please specify your PIN code'],
       trim: true,
-      match: [ZIP_CODE_REGEX, 'Please add a valid zip code']
+      match: [PIN_CODE_REGEX, 'Please add a valid six-digit Indian PIN code']
     },
     state: {
       type: String,
@@ -53,8 +53,7 @@ const donorProfileSchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum: ['Point'],
-        default: 'Point'
+        enum: ['Point']
       },
       coordinates: {
         type: [Number],
@@ -94,7 +93,7 @@ const donorProfileSchema = new mongoose.Schema(
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      default: 'approved',
       index: true
     },
     approvedBy: {

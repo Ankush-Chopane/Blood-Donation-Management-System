@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { BLOOD_TYPES, PHONE_REGEX, ZIP_CODE_REGEX } = require('./constants');
+const { BLOOD_TYPES, PHONE_REGEX, PIN_CODE_REGEX } = require('./constants');
 
 const recipientProfileSchema = new mongoose.Schema(
   {
@@ -39,11 +39,11 @@ const recipientProfileSchema = new mongoose.Schema(
       trim: true,
       maxlength: 80
     },
-    zipCode: {
+    pinCode: {
       type: String,
-      required: [true, 'Please specify your zip code'],
+      required: [true, 'Please specify your PIN code'],
       trim: true,
-      match: [ZIP_CODE_REGEX, 'Please add a valid zip code']
+      match: [PIN_CODE_REGEX, 'Please add a valid six-digit Indian PIN code']
     },
     emergencyContactName: {
       type: String,

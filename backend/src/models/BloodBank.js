@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { BLOOD_TYPES, PHONE_REGEX, ZIP_CODE_REGEX } = require('./constants');
+const { BLOOD_TYPES, PHONE_REGEX, PIN_CODE_REGEX } = require('./constants');
 
 const inventorySummaryShape = BLOOD_TYPES.reduce((shape, type) => {
   shape[type] = {
@@ -41,10 +41,10 @@ const bloodBankSchema = new mongoose.Schema(
       trim: true,
       maxlength: 80
     },
-    zipCode: {
+    pinCode: {
       type: String,
       trim: true,
-      match: [ZIP_CODE_REGEX, 'Please add a valid zip code']
+      match: [PIN_CODE_REGEX, 'Please add a valid six-digit Indian PIN code']
     },
     contactNumber: {
       type: String,
@@ -65,8 +65,7 @@ const bloodBankSchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum: ['Point'],
-        default: 'Point'
+        enum: ['Point']
       },
       coordinates: {
         type: [Number],
@@ -77,11 +76,27 @@ const bloodBankSchema = new mongoose.Schema(
       }
     },
     inventory: inventorySummaryShape,
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+      index: true
+    },
     status: {
       type: String,
       enum: ['active', 'inactive'],
-      default: 'active',
+      default: 'inactive',
       index: true
+    },
+    verifiedAt: Date,
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: 250
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
   },
   {

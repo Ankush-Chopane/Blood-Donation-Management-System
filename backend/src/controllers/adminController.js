@@ -15,11 +15,16 @@ exports.getDashboardSummary = asyncHandler(async (req, res) => {
     donors,
     recipients,
     bloodBanks,
+    pendingBanks,
+    approvedBanks,
+    rejectedBanks,
+    suspendedBanks,
     pendingRequests,
     totalRequests,
     availableInventory,
     unreadNotifications,
     pendingDonorApprovals,
+    pendingBankApprovals,
     pendingAppointments,
     recentDonations
   ] = await Promise.all([
@@ -27,6 +32,10 @@ exports.getDashboardSummary = asyncHandler(async (req, res) => {
     DonorProfile.countDocuments(),
     RecipientProfile.countDocuments(),
     BloodBank.countDocuments(),
+    BloodBank.countDocuments({ verificationStatus: 'pending' }),
+    BloodBank.countDocuments({ verificationStatus: 'approved', status: 'active' }),
+    BloodBank.countDocuments({ verificationStatus: 'rejected' }),
+    BloodBank.countDocuments({ verificationStatus: 'approved', status: 'inactive' }),
     BloodRequest.countDocuments({ status: { $in: ['pending', 'matched'] } }),
     BloodRequest.countDocuments(),
     Inventory.aggregate([
@@ -35,6 +44,7 @@ exports.getDashboardSummary = asyncHandler(async (req, res) => {
     ]),
     Notification.countDocuments({ isRead: false }),
     DonorProfile.countDocuments({ approvalStatus: 'pending' }),
+    BloodBank.countDocuments({ verificationStatus: 'pending' }),
     Appointment.countDocuments({ status: 'pending' }),
     DonationHistory.find()
       .populate('donor', 'name email')
@@ -62,11 +72,16 @@ exports.getDashboardSummary = asyncHandler(async (req, res) => {
         donors,
         recipients,
         bloodBanks,
+        pendingBanks,
+        approvedBanks,
+        rejectedBanks,
+        suspendedBanks,
         requests: totalRequests,
         pendingRequests,
         availableInventoryUnits: availableInventory[0]?.totalUnits || 0,
         unreadNotifications,
         pendingDonorApprovals,
+        pendingBankApprovals,
         pendingAppointments
       },
       inventoryByType,

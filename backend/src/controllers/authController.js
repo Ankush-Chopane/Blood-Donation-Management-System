@@ -1,9 +1,11 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const BloodBank = require('../models/BloodBank');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/appError');
 const { sendVerificationEmail, sendResetEmail } = require('../services/mailService');
+const { createNotification } = require('../services/notificationService');
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -24,7 +26,15 @@ const sanitizeUser = (user) => ({
 });
 
 exports.register = asyncHandler(async (req, res) => {
-  const { name, email, password, role, phone, avatarUrl } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    phone,
+    avatarUrl,
+    bankDetails
+  } = req.body;
 
   const userExists = await User.findOne({ email: email.toLowerCase() });
   if (userExists) {
@@ -42,6 +52,39 @@ exports.register = asyncHandler(async (req, res) => {
     avatarUrl,
     verificationToken
   });
+
+  if (role === 'bank') {
+    try {
+      const bloodBank = await BloodBank.create({
+        user: user._id,
+        name: bankDetails?.name || `${name} Blood Bank`,
+        address: bankDetails?.address,
+        city: bankDetails?.city,
+        state: bankDetails?.state,
+        pinCode: bankDetails?.pinCode,
+        contactNumber: bankDetails?.contactNumber || phone,
+        email,
+        licenseNumber: bankDetails?.licenseNumber,
+        verificationStatus: 'pending',
+        status: 'inactive'
+      });
+
+      const admins = await User.find({ role: 'admin', status: 'active' }).select('_id');
+      await Promise.all(
+        admins.map((admin) => createNotification({
+          user: admin._id,
+          type: 'approval',
+          title: 'New blood bank application',
+          message: `${bloodBank.name} submitted a blood bank profile for verification.`,
+          resourceType: 'BloodBank',
+          resourceId: bloodBank._id
+        }))
+      );
+    } catch (error) {
+      await User.findByIdAndDelete(user._id);
+      throw error;
+    }
+  }
 
   await sendVerificationEmail(user.email, user.name, verificationToken);
 

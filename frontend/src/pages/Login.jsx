@@ -3,21 +3,16 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { FaEnvelope, FaLock, FaSignInAlt, FaFlask } from 'react-icons/fa';
-
-const DEMO_EMAIL = 'demo@bloodconnect.com';
-const DEMO_PASSWORD = 'Demo@1234';
+import { FaEnvelope, FaLock, FaSignInAlt } from 'react-icons/fa';
 
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors }
   } = useForm();
 
@@ -31,23 +26,6 @@ const Login = () => {
       navigate('/dashboard');
     } else {
       toast.error(result.error);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setDemoLoading(true);
-    // Fill fields visually so user sees what's happening
-    setValue('email', DEMO_EMAIL);
-    setValue('password', DEMO_PASSWORD);
-
-    const result = await login(DEMO_EMAIL, DEMO_PASSWORD);
-    setDemoLoading(false);
-
-    if (result.success) {
-      toast.success('Welcome! You are now in the demo account 🎉');
-      navigate('/dashboard');
-    } else {
-      toast.error('Demo login failed. Please try again.');
     }
   };
 
@@ -65,35 +43,7 @@ const Login = () => {
           <p className="text-lightGray/50 text-sm mt-1">Sign in to coordinate emergency matching.</p>
         </div>
 
-        {/* Demo Login Button */}
-        <button
-          id="demo-login-btn"
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={demoLoading || loading}
-          className="w-full flex items-center justify-center gap-2.5 py-3 px-4 mb-4 rounded-xl font-body font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-60 border border-dashed border-amber-400/50 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20 hover:border-amber-400/80 hover:shadow-[0_0_18px_rgba(251,191,36,0.15)]"
-        >
-          {demoLoading ? (
-            <>
-              <span className="w-4 h-4 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
-              Entering demo…
-            </>
-          ) : (
-            <>
-              <FaFlask className="text-amber-300" />
-              Try Demo Account
-            </>
-          )}
-        </button>
-
-        {/* OR Divider */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-glass-border" />
-          <span className="text-lightGray/30 text-xs font-body uppercase tracking-widest">or sign in</span>
-          <div className="flex-1 h-px bg-glass-border" />
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="auth-form flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="font-heading text-xs font-semibold text-white uppercase tracking-wider" htmlFor="email">
               Email Address
@@ -143,7 +93,7 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={loading || demoLoading}
+            disabled={loading}
             className="w-full py-3.5 bg-gradient-to-r from-primary to-secondary text-white font-body font-bold rounded-xl transition-all hover:shadow-[0_0_20px_rgba(239,35,60,0.4)] disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
           >
             {loading ? 'Signing in...' : <><FaSignInAlt /> Sign In</>}

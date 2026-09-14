@@ -1,12 +1,31 @@
 const BloodRequest = require('../models/BloodRequest');
+const BloodBank = require('../models/BloodBank');
+const Inventory = require('../models/Inventory');
 const DonorProfile = require('../models/DonorProfile');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/appError');
 const { createNotification } = require('../services/notificationService');
 const { buildStatusHistoryEntry, createRequestCode } = require('../utils/requestHelpers');
 
-const canManageRequest = (req, request) =>
-  request.requestedBy.toString() === req.user.id || ['admin', 'coordinator', 'bank'].includes(req.user.role);
+const canManageRequest = (req, request) => {
+  if (req.user.role === 'bank') return true;
+  return req.user.role === 'recipient'
+    && request.requestedBy.toString() === req.user.id
+    && Object.keys(req.body).every((key) => ['status', 'note'].includes(key))
+    && req.body.status === 'cancelled';
+};
+
+const requireVerifiedBank = async (req) => {
+  const bank = await BloodBank.findOne({
+    user: req.user.id,
+    verificationStatus: 'approved',
+    status: 'active'
+  }).select('_id');
+
+  if (!bank) {
+    throw new AppError('Your blood bank must be approved and active before managing requests', 403);
+  }
+};
 
 const populateRequestQuery = (query) =>
   query
@@ -15,44 +34,85 @@ const populateRequestQuery = (query) =>
     .populate('assignedBloodBank', 'name city contactNumber');
 
 exports.createRequest = asyncHandler(async (req, res) => {
-  const request = await BloodRequest.create({
+  if (!req.body.neededBy) {
+    throw new AppError('Please select a date for the blood request', 400);
+  }
+
+  const requestedDate = new Date(req.body.neededBy);
+  if (Number.isNaN(requestedDate.getTime())) {
+    throw new AppError('Please provide a valid needed-by date', 400);
+  }
+
+  const indiaToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  if (requestedDate.toISOString().slice(0, 10) < indiaToday) {
+    throw new AppError('The needed-by date cannot be in the past for India time', 400);
+  }
+
+  const requestPayload = {
     ...req.body,
+    ...(req.file ? { documentProofUrl: `/uploads/${req.file.filename}` } : {}),
     requestedBy: req.user.id,
     requestCode: createRequestCode(),
+    verificationStatus: 'pending',
+    status: 'pending',
     isEmergency: req.body.isEmergency === true || req.body.urgency === 'critical',
     statusHistory: [
       buildStatusHistoryEntry({
         status: 'pending',
-        note: req.body.notes || 'Request created',
+        note: req.body.notes || 'Request created and awaiting verification',
         userId: req.user.id
       })
     ]
+  };
+
+  const request = await BloodRequest.create({
+    ...requestPayload
   });
 
-  const nearbyDonors = await DonorProfile.find({
-    bloodType: req.body.bloodTypeNeeded,
-    city: { $regex: `^${req.body.city}$`, $options: 'i' },
-    isEligible: true,
-    availability: { $in: ['available', 'on_call'] },
-    approvalStatus: 'approved',
+  const availableStock = await Inventory.aggregate([
+    {
+      $match: {
+        bloodType: request.bloodTypeNeeded,
+        status: 'available',
+        expiryDate: { $gt: new Date() }
+      }
+    },
+    {
+      $group: {
+        _id: '$bloodBank',
+        availableUnits: { $sum: '$units' }
+      }
+    },
+    {
+      $match: { availableUnits: { $gte: request.unitsNeeded } }
+    }
+  ]);
+
+  const stockByBank = new Map(availableStock.map((stock) => [String(stock._id), stock.availableUnits]));
+  const eligibleBanks = await BloodBank.find({
+    _id: { $in: availableStock.map((stock) => stock._id) },
+    verificationStatus: 'approved',
     status: 'active'
-  })
-    .select('user')
-    .limit(request.isEmergency ? 25 : 10)
-    .lean();
+  }).select('name city user');
+
+  eligibleBanks.sort((first, second) => {
+    const firstIsLocal = first.city?.toLowerCase() === request.city?.toLowerCase();
+    const secondIsLocal = second.city?.toLowerCase() === request.city?.toLowerCase();
+    return Number(secondIsLocal) - Number(firstIsLocal);
+  });
 
   await Promise.all(
-    nearbyDonors.map((donor) =>
-      createNotification({
-        user: donor.user,
+    eligibleBanks
+      .filter((bank) => bank.user)
+      .map((bank) => createNotification({
+        user: bank.user,
         type: 'request',
-        title: request.isEmergency ? 'Emergency blood request nearby' : 'New blood request nearby',
-        message: `${request.bloodTypeNeeded} needed in ${request.city} for ${request.recipientName}.`,
+        title: request.isEmergency ? 'Emergency blood request available' : 'New blood request available',
+        message: `${request.bloodTypeNeeded} request for ${request.unitsNeeded} unit(s) at ${request.hospitalName}, ${request.city}. Your bank has ${stockByBank.get(String(bank._id))} available unit(s). Review and accept it in Verify Requests.`,
         resourceType: 'BloodRequest',
         resourceId: request._id,
         sendEmail: request.isEmergency
-      })
-    )
+      }))
   );
 
   const populatedRequest = await populateRequestQuery(BloodRequest.findById(request._id));
@@ -73,6 +133,7 @@ exports.listRequests = asyncHandler(async (req, res) => {
     requestedBy,
     assignedBloodBank,
     isEmergency,
+    verificationStatus,
     page = 1,
     limit = 20
   } = req.query;
@@ -86,10 +147,20 @@ exports.listRequests = asyncHandler(async (req, res) => {
   if (requestedBy) query.requestedBy = requestedBy;
   if (assignedBloodBank) query.assignedBloodBank = assignedBloodBank;
   if (isEmergency !== undefined) query.isEmergency = isEmergency === 'true';
+  if (verificationStatus) query.verificationStatus = verificationStatus;
 
   const pageNumber = Number(page);
   const limitNumber = Math.min(Number(limit), 50);
   const skip = (pageNumber - 1) * limitNumber;
+
+  if (req.user && !['admin', 'coordinator', 'bank'].includes(req.user.role)) {
+    if (req.user.role === 'recipient') {
+      query.requestedBy = req.user.id;
+    } else if (req.user.role !== 'bank') {
+      query.verificationStatus = 'approved';
+      query.status = query.status || 'pending';
+    }
+  }
 
   const [requests, total] = await Promise.all([
     populateRequestQuery(
@@ -150,11 +221,48 @@ exports.updateRequest = asyncHandler(async (req, res) => {
     throw new AppError('Not authorized to update this blood request', 403);
   }
 
-  const { status, note, unitsFulfilled, ...rest } = req.body;
+  if (req.user.role === 'recipient') {
+    if (!['pending', 'matched'].includes(request.status)) {
+      throw new AppError('Only open blood requests can be cancelled', 400);
+    }
+    request.status = 'cancelled';
+    request.lastStatusUpdatedAt = new Date();
+    request.statusHistory.push(
+      buildStatusHistoryEntry({
+        status: 'cancelled',
+        note: req.body.note || 'Request cancelled by recipient',
+        userId: req.user.id
+      })
+    );
+    await request.save();
+    return res.status(200).json({ success: true, message: 'Blood request cancelled successfully', data: request });
+  }
+
+  await requireVerifiedBank(req);
+
+  const { status, note, unitsFulfilled, verificationStatus, rejectionReason, ...rest } = req.body;
   Object.assign(request, rest);
 
+  if (verificationStatus && ['pending', 'approved', 'rejected'].includes(verificationStatus)) {
+    request.verificationStatus = verificationStatus;
+    request.verifiedBy = req.user.id;
+    request.verifiedAt = new Date();
+
+    if (verificationStatus === 'rejected') {
+      request.rejectionReason = rejectionReason || 'Request did not pass facility verification.';
+      request.status = 'cancelled';
+    } else {
+      request.rejectionReason = '';
+      request.status = request.status || 'pending';
+    }
+  }
+
   if (unitsFulfilled !== undefined) {
-    request.unitsFulfilled = unitsFulfilled;
+    const nextUnitsFulfilled = Number(unitsFulfilled);
+    if (!Number.isInteger(nextUnitsFulfilled) || nextUnitsFulfilled < 0 || nextUnitsFulfilled > request.unitsNeeded) {
+      throw new AppError('Fulfilled units must be between zero and the requested quantity', 400);
+    }
+    request.unitsFulfilled = nextUnitsFulfilled;
   }
 
   if (status && status !== request.status) {
@@ -180,6 +288,34 @@ exports.updateRequest = asyncHandler(async (req, res) => {
   }
 
   await request.save();
+
+  if (verificationStatus === 'approved') {
+    const nearbyDonors = await DonorProfile.find({
+      bloodType: request.bloodTypeNeeded,
+      city: { $regex: `^${request.city}$`, $options: 'i' },
+      isEligible: true,
+      availability: { $in: ['available', 'on_call'] },
+      approvalStatus: 'approved',
+      status: 'active'
+    })
+      .select('user')
+      .limit(request.isEmergency ? 25 : 10)
+      .lean();
+
+    await Promise.all(
+      nearbyDonors.map((donor) =>
+        createNotification({
+          user: donor.user,
+          type: 'request',
+          title: request.isEmergency ? 'Emergency blood request nearby' : 'New blood request nearby',
+          message: `${request.bloodTypeNeeded} needed in ${request.city} for ${request.recipientName}.`,
+          resourceType: 'BloodRequest',
+          resourceId: request._id,
+          sendEmail: request.isEmergency
+        })
+      )
+    );
+  }
 
   const updatedRequest = await populateRequestQuery(BloodRequest.findById(req.params.id));
 

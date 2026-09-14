@@ -13,7 +13,7 @@ const router = express.Router();
 router
   .route('/')
   .get(protect, listAppointments)
-  .post(protect, authorize('donor', 'admin', 'coordinator'), createAppointment);
+  .post(protect, authorize('donor'), createAppointment);
 
 router
   .route('/:id')

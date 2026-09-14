@@ -5,10 +5,10 @@ import { useAuth } from '../hooks/useAuth';
 
 const navLinks = [
   { name: 'Home', path: '/' },
-  { name: 'About', path: '/#about' },
-  { name: 'Donate', path: '/#donate' },
-  { name: 'Request Blood', path: '/#request' },
-  { name: 'Blood Banks', path: '/#blood-banks' },
+  { name: 'About', path: '/#timeline' },
+  { name: 'Donate', path: '/#features' },
+  { name: 'Request Blood', path: '/#emergency-cta' },
+  { name: 'Blood Banks', path: '/#features' },
   { name: 'Contact', path: '/#contact' }
 ];
 
