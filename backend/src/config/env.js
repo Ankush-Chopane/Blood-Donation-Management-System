@@ -14,7 +14,10 @@ const validateEnv = () => {
 
 const getAllowedOrigins = () => {
   const rawOrigins = process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || 'http://localhost:5173';
-  return rawOrigins.split(',').map((origin) => origin.trim()).filter(Boolean);
+  return rawOrigins
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
 };
 
 module.exports = {
